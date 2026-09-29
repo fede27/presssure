@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../logic/achievements.dart';
-import '../logic/formatting.dart';
+import '../logic/schedule.dart';
+import '../models/settings.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
 import '../widgets/badge_view.dart';
@@ -13,15 +15,17 @@ class AchievementsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final dates = context.dates;
     final state = AppScope.of(context);
     final report = state.achievements;
     final tracker = state.tracker;
     final schedule = state.schedule;
-    final now = state.now();
-    final plural = schedule.occasionPlural;
+    final t = state.thresholds;
+    final range = report.bestStreakPeriods;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Traguardi'), titleSpacing: 0),
+      appBar: AppBar(title: Text(l.achievements), titleSpacing: 0),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
         children: [
@@ -29,14 +33,14 @@ class AchievementsScreen extends StatelessWidget {
             children: [
               _Stat(
                 value: '${tracker.currentStreak}',
-                label: '$plural di fila',
+                label: l.inARowStat(schedule.occasions(l, 2)),
               ),
               const SizedBox(width: 8),
-              _Stat(value: '${tracker.bestStreak}', label: 'record di fila'),
+              _Stat(value: '${tracker.bestStreak}', label: l.recordInARow),
               const SizedBox(width: 8),
               _Stat(
                 value: '${state.measurements.length}',
-                label: 'misure totali',
+                label: l.totalReadings,
               ),
             ],
           ),
@@ -57,14 +61,11 @@ class AchievementsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        tracker.jollyAvailable
-                            ? 'Jolly del mese: 1 disponibile'
-                            : 'Jolly del mese: già usato',
+                        tracker.jollyAvailable ? l.jollyAvailable : l.jollyUsed,
                         style: AppText.body(15, weight: FontWeight.w800),
                       ),
                       Text(
-                        'Salti una ${schedule.occasionSingular}? Il jolly tiene '
-                        'viva la serie. Ne ricevi uno ogni mese.',
+                        l.jollyBody(schedule.jollyKind),
                         style: AppText.body(
                           13,
                           height: 1.4,
@@ -78,47 +79,57 @@ class AchievementsScreen extends StatelessWidget {
             ),
           ),
           for (final (group, title) in [
-            (BadgeGroup.consistency, 'Costanza'),
-            (BadgeGroup.habits, 'Buone abitudini'),
-            (BadgeGroup.trend, 'Andamento'),
+            (BadgeGroup.consistency, l.groupConsistency),
+            (BadgeGroup.habits, l.groupHabits),
+            (BadgeGroup.trend, l.groupTrend),
           ]) ...[
             const SizedBox(height: 22),
             _BadgeSection(
               title: title,
               badges: report.inGroup(group).toList(),
-              now: now,
+              schedule: schedule,
+              thresholds: t,
+              now: state.now(),
               note: group == BadgeGroup.trend
-                  ? 'soglia ${state.thresholds.highSystolic}/'
-                        '${state.thresholds.highDiastolic}, sulle medie mensili'
+                  ? l.trendGroupNote(t.highSystolic, t.highDiastolic)
                   : null,
             ),
           ],
           const SizedBox(height: 22),
-          SectionHeading('Record personali'),
+          SectionHeading(l.personalRecords),
           const SizedBox(height: 10),
           AppCard(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: Column(
               children: [
                 _RecordRow(
-                  label: 'Serie più lunga',
+                  label: l.longestStreak,
                   value: report.bestStreak == 0
                       ? '–'
-                      : '${report.bestStreak} $plural'
-                            '${report.bestStreakRange == null ? '' : ' · ${report.bestStreakRange}'}',
+                      : [
+                          schedule.countOccasions(l, report.bestStreak),
+                          if (range != null)
+                            dates.monthRange(
+                              range.first.start,
+                              range.last.start,
+                            ),
+                        ].join(' · '),
                 ),
                 const Divider(),
                 _RecordRow(
-                  label: 'Mese con la media più bassa',
+                  label: l.lowestMonth,
                   value: report.lowestMonth == null
                       ? '–'
-                      : '${monthName(report.lowestMonth!.month)} · '
+                      : '${dates.monthName(report.lowestMonth!.month)} · '
                             '${report.lowestMonth!.avg}',
                 ),
                 const Divider(),
                 _RecordRow(
-                  label: 'Mesi senza $plural saltate',
-                  value: '${report.completeMonths} su ${report.monthsTracked}',
+                  label: l.completeMonths,
+                  value: l.progressOf(
+                    report.completeMonths,
+                    report.monthsTracked,
+                  ),
                 ),
               ],
             ),
@@ -163,12 +174,16 @@ class _BadgeSection extends StatelessWidget {
   const _BadgeSection({
     required this.title,
     required this.badges,
+    required this.schedule,
+    required this.thresholds,
     required this.now,
     this.note,
   });
 
   final String title;
   final List<Achievement> badges;
+  final Schedule schedule;
+  final Thresholds thresholds;
   final DateTime now;
   final String? note;
 
@@ -180,7 +195,7 @@ class _BadgeSection extends StatelessWidget {
       children: [
         SectionHeading(
           title,
-          trailing: note ?? '$unlocked su ${badges.length}',
+          trailing: note ?? context.l10n.progressOf(unlocked, badges.length),
         ),
         const SizedBox(height: 10),
         AppCard(
@@ -194,7 +209,12 @@ class _BadgeSection extends StatelessWidget {
                   for (final b in badges)
                     SizedBox(
                       width: w,
-                      child: _BadgeTile(badge: b, now: now),
+                      child: _BadgeTile(
+                        badge: b,
+                        schedule: schedule,
+                        thresholds: thresholds,
+                        now: now,
+                      ),
                     ),
                 ],
               );
@@ -207,18 +227,30 @@ class _BadgeSection extends StatelessWidget {
 }
 
 class _BadgeTile extends StatelessWidget {
-  const _BadgeTile({required this.badge, required this.now});
+  const _BadgeTile({
+    required this.badge,
+    required this.schedule,
+    required this.thresholds,
+    required this.now,
+  });
 
   final Achievement badge;
+  final Schedule schedule;
+  final Thresholds thresholds;
   final DateTime now;
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final b = badge;
+    final title = achievementTitle(b, l, schedule);
+    final detail = achievementDetail(b, l, context.dates, now, thresholds);
     return Semantics(
-      label:
-          '${b.title}, ${b.unlocked ? 'sbloccato' : 'da sbloccare'}, '
-          '${b.detail}',
+      label: l.badgeSemantics(
+        title,
+        b.unlocked ? l.badgeUnlocked : l.badgeLocked,
+        detail,
+      ),
       excludeSemantics: true,
       child: Column(
         children: [
@@ -246,7 +278,7 @@ class _BadgeTile extends StatelessWidget {
                   right: -14,
                   top: -8,
                   child: Pill(
-                    label: 'NUOVO',
+                    label: l.newTag,
                     background: AppColors.systolic,
                     foreground: Colors.white,
                     fontSize: 10,
@@ -262,7 +294,7 @@ class _BadgeTile extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
-              b.title,
+              title,
               textAlign: TextAlign.center,
               style: AppText.body(
                 13,
@@ -273,7 +305,7 @@ class _BadgeTile extends StatelessWidget {
             ),
           ),
           Text(
-            b.detail,
+            detail,
             textAlign: TextAlign.center,
             style: AppText.body(
               11,

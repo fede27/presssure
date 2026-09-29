@@ -228,4 +228,75 @@ void main() {
     expect(find.text('18 domeniche · apr – ago'), findsOneWidget);
     expect(find.text('5 su 6'), findsOneWidget);
   });
+
+  group('localization', () {
+    testWidgets('US English phone: texts, dates and times in English', (
+      tester,
+    ) async {
+      final state = await pumpApp(
+        tester,
+        measurements: designReadings(),
+        locale: const Locale('en', 'US'),
+      );
+
+      expect(state.locale, const Locale('en'));
+      expect(state.dateLocale, 'en_US');
+      expect(find.text('Good morning'), findsOneWidget);
+      expect(find.text('Sunday, September 27'), findsOneWidget);
+      expect(find.text('Today is measuring day'), findsOneWidget);
+      expect(
+        find.textContaining('5 Sundays in a row.', findRichText: true),
+        findsOneWidget,
+      );
+      expect(find.text('Last reading · Sunday, September 20'), findsOneWidget);
+      expect(navItem('Diary'), findsOneWidget);
+
+      await tapAndSettle(tester, navItem('Diary'));
+      expect(find.text('September'), findsOneWidget);
+      expect(find.text('3 readings · average 126/80'), findsOneWidget);
+      // 12-hour clock in the US.
+      expect(
+        find.textContaining(RegExp(r'^8:05\sAM · pulse 66$')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('UK English phone: day before month', (tester) async {
+      final state = await pumpApp(
+        tester,
+        measurements: designReadings(),
+        locale: const Locale('en', 'GB'),
+      );
+      expect(state.dateLocale, 'en_GB');
+      expect(find.text('Sunday 27 September'), findsOneWidget);
+    });
+
+    testWidgets('unsupported language falls back to English', (tester) async {
+      await pumpApp(
+        tester,
+        measurements: designReadings(),
+        locale: const Locale('de', 'DE'),
+      );
+      expect(find.text('Good morning'), findsOneWidget);
+      expect(find.text('Sunday, September 27'), findsOneWidget);
+    });
+
+    for (final (locale, first, last) in [
+      (const Locale('it', 'IT'), 'Lunedì', 'Domenica'),
+      (const Locale('en', 'US'), 'Sunday', 'Saturday'),
+    ]) {
+      testWidgets('the week in the habit screen starts on $first ($locale)', (
+        tester,
+      ) async {
+        final semantics = tester.ensureSemantics();
+        await pumpApp(tester, settings: const AppSettings(), locale: locale);
+        await tapAndSettle(tester, find.byType(FilledButton));
+
+        final firstX = tester.getCenter(find.bySemanticsLabel(first)).dx;
+        final lastX = tester.getCenter(find.bySemanticsLabel(last)).dx;
+        expect(firstX, lessThan(lastX));
+        semantics.dispose();
+      });
+    }
+  });
 }

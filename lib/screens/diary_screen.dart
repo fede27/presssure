@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../logic/bp_category.dart';
-import '../logic/formatting.dart';
 import '../logic/schedule.dart';
 import '../logic/stats.dart';
 import '../models/measurement.dart';
@@ -51,8 +51,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
     };
   }
 
+  void _toggle(int key) => setState(
+    () => _toggled.contains(key) ? _toggled.remove(key) : _toggled.add(key),
+  );
+
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final dates = context.dates;
     final state = AppScope.of(context);
     final all = state.measurements;
     final filtered = all.where((m) => _matches(m, state)).toList();
@@ -69,7 +75,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         icon: const Icon(Icons.add_rounded),
         label: Text(
-          'Nuova misura',
+          l.newReading,
           style: AppText.body(15, weight: FontWeight.w800),
         ),
       ),
@@ -89,23 +95,25 @@ class _DiaryScreenState extends State<DiaryScreen> {
                         Semantics(
                           header: true,
                           child: Text(
-                            'Diario',
+                            l.navDiary,
                             style: AppText.display(32, weight: FontWeight.w700),
                           ),
                         ),
                         Text(
                           all.isEmpty
-                              ? 'Ancora nessuna misura'
-                              : '${all.length} ${all.length == 1 ? 'misura' : 'misure'} '
-                                    'da ${monthName(all.first.takenAt.month)} · '
-                                    '${state.schedule.describe()}',
+                              ? l.emptyTitle
+                              : l.diarySubtitle(
+                                  l.readingsCount(all.length),
+                                  dates.monthName(all.first.takenAt.month),
+                                  state.schedule.describe(l),
+                                ),
                           style: AppText.body(14, color: AppColors.muted),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    tooltip: _searching ? 'Chiudi ricerca' : 'Cerca nel diario',
+                    tooltip: _searching ? l.closeSearch : l.searchDiary,
                     onPressed: () => setState(() {
                       _searching = !_searching;
                       if (!_searching) _query.clear();
@@ -122,9 +130,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
               TextField(
                 controller: _query,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Cerca nelle note',
-                  prefixIcon: Icon(Icons.search_rounded),
+                decoration: InputDecoration(
+                  hintText: l.searchHint,
+                  prefixIcon: const Icon(Icons.search_rounded),
                 ),
               ),
             ],
@@ -134,12 +142,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
               child: Row(
                 children: [
                   for (final (f, label) in [
-                    (_Filter.all, 'Tutte'),
-                    (_Filter.notes, 'Con note'),
-                    (
-                      _Filter.high,
-                      'Oltre ${t.highSystolic}/${t.highDiastolic}',
-                    ),
+                    (_Filter.all, l.filterAll),
+                    (_Filter.notes, l.filterNotes),
+                    (_Filter.high, l.bandHigh(t.highSystolic, t.highDiastolic)),
                   ]) ...[
                     ChoicePill(
                       label: label,
@@ -159,7 +164,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  'Nessuna misura corrisponde.',
+                  l.noMatch,
                   textAlign: TextAlign.center,
                   style: AppText.body(14, color: AppColors.muted),
                 ),
@@ -179,13 +184,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
     List<_Gap> gaps,
     AppState state,
   ) {
+    final l = context.l10n;
+    final dates = context.dates;
     final key = g.year * 12 + g.month;
     final open = (index < 2) != _toggled.contains(key);
     final title =
-        capitalize(monthName(g.month)) +
+        capitalize(dates.monthName(g.month)) +
         (g.year == state.now().year ? '' : ' ${g.year}');
-    final summary =
-        '${g.items.length} ${g.items.length == 1 ? 'misura' : 'misure'} · media ${g.avg}';
+    final summary = l.monthSummary(l.readingsCount(g.items.length), '${g.avg}');
 
     if (!open) {
       return Padding(
@@ -193,11 +199,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
         child: AppCard(
           radius: 18,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          onTap: () => setState(
-            () => _toggled.contains(key)
-                ? _toggled.remove(key)
-                : _toggled.add(key),
-          ),
+          onTap: () => _toggle(key),
           child: Row(
             children: [
               Text(title, style: AppText.body(16, weight: FontWeight.w800)),
@@ -233,11 +235,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           InkWell(
-            onTap: () => setState(
-              () => _toggled.contains(key)
-                  ? _toggled.remove(key)
-                  : _toggled.add(key),
-            ),
+            onTap: () => _toggle(key),
             child: SectionHeading(title, trailing: summary),
           ),
           const SizedBox(height: 10),
@@ -328,11 +326,13 @@ class _EntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final dates = context.dates;
     final m = measurement;
     final details = [
-      formatTime(m.takenAt),
-      if (m.pulse != null) 'polso ${m.pulse}',
-      if (m.doubleReading) 'media di 2',
+      dates.time(m.takenAt),
+      if (m.pulse != null) l.pulseLower(m.pulse!),
+      if (m.doubleReading) l.averageOfTwo,
     ].join(' · ');
     return AppCard(
       radius: 18,
@@ -344,7 +344,7 @@ class _EntryCard extends StatelessWidget {
           Row(
             children: [
               _DateBox(
-                weekday: weekdayShort[m.takenAt.weekday - 1],
+                weekday: dates.weekdayShort(m.takenAt),
                 day: '${m.takenAt.day}',
               ),
               const SizedBox(width: 12),
@@ -366,11 +366,11 @@ class _EntryCard extends StatelessWidget {
                         ),
                         if (m.source == ReadingSource.photo) ...[
                           const SizedBox(width: 6),
-                          const Icon(
+                          Icon(
                             Icons.photo_camera_outlined,
                             size: 15,
                             color: AppColors.muted,
-                            semanticLabel: 'Letto da foto',
+                            semanticLabel: l.readFromPhoto,
                           ),
                         ],
                       ],
@@ -410,10 +410,8 @@ class _GapRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final n = gap.days.length;
-    final label = n == 1
-        ? '1 ${schedule.occasionSingular} senza misura'
-        : '$n ${schedule.occasionPlural} senza misura';
     return DashedBorder(
       color: AppColors.borderStrong,
       radius: 18,
@@ -424,20 +422,20 @@ class _GapRow extends StatelessWidget {
         child: Row(
           children: [
             _DateBox(
-              weekday: weekdayShort[gap.first.weekday - 1],
+              weekday: context.dates.weekdayShort(gap.first),
               day: gap.days.map((d) => d.day).join(' · '),
               muted: true,
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                label,
+                l.gapLabel(n, schedule.occasions(l, n)),
                 style: AppText.body(14, color: AppColors.muted),
               ),
             ),
             TextButton(
               onPressed: () => openNewMeasurement(context, day: gap.first),
-              child: const Text('Aggiungi'),
+              child: Text(l.add),
             ),
           ],
         ),
@@ -453,25 +451,26 @@ class _EmptyDiary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return AppCard(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Il diario è vuoto',
+            l.diaryEmptyTitle,
             style: AppText.body(16, weight: FontWeight.w800),
           ),
           const SizedBox(height: 6),
           Text(
-            'Ogni misura che salvi finisce qui, raggruppata per mese.',
+            l.diaryEmptyBody,
             style: AppText.body(14, color: AppColors.muted),
           ),
           const SizedBox(height: 12),
           TextButton.icon(
             onPressed: onAdd,
             icon: const Icon(Icons.add_rounded),
-            label: const Text('Aggiungi la prima misura'),
+            label: Text(l.diaryAddFirst),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import 'diary_screen.dart';
 import 'report_screen.dart';
 import 'today_screen.dart';
@@ -29,6 +30,7 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
       body: IndexedStack(
         index: _index,
@@ -42,25 +44,25 @@ class _HomeShellState extends State<HomeShell> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: select,
-        destinations: const [
+        destinations: [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home_rounded),
-            label: 'Oggi',
+            label: l.navToday,
           ),
           NavigationDestination(
             icon: Icon(Icons.menu_book_outlined),
             selectedIcon: Icon(Icons.menu_book_rounded),
-            label: 'Diario',
+            label: l.navDiary,
           ),
           NavigationDestination(
             icon: Icon(Icons.show_chart_rounded),
-            label: 'Andamento',
+            label: l.navTrends,
           ),
           NavigationDestination(
             icon: Icon(Icons.share_outlined),
             selectedIcon: Icon(Icons.share_rounded),
-            label: 'Condividi',
+            label: l.navShare,
           ),
         ],
       ),

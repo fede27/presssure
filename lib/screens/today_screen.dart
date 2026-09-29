@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../logic/bp_category.dart';
-import '../logic/formatting.dart';
 import '../logic/schedule.dart';
 import '../logic/stats.dart';
 import '../models/settings.dart';
@@ -51,6 +51,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
       child: Row(
@@ -68,13 +69,13 @@ class _Header extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  capitalize(formatWeekdayDayMonth(now)),
+                  capitalize(context.dates.weekdayDayMonth(now)),
                   style: AppText.body(14, color: AppColors.muted),
                 ),
                 Semantics(
                   header: true,
                   child: Text(
-                    greetingFor(now),
+                    l.greeting(greetingKey(now)),
                     style: AppText.display(32, weight: FontWeight.w700),
                   ),
                 ),
@@ -82,7 +83,7 @@ class _Header extends StatelessWidget {
             ),
           ),
           Tooltip(
-            message: 'Promemoria e abitudine',
+            message: l.habitAndReminders,
             child: Material(
               color: AppColors.surface,
               shape: const CircleBorder(
@@ -111,30 +112,26 @@ class _Header extends StatelessWidget {
 class _HabitCard extends StatelessWidget {
   const _HabitCard();
 
-  String _title(AppState state) {
+  String _title(AppState state, AppLocalizations l, Dates dates) {
     final tracker = state.tracker;
     final now = state.now();
-    if (state.latest == null) return 'La tua prima misura ti aspetta';
+    if (state.latest == null) return l.todayFirstReading;
     final current = tracker.current!;
     if (current.status == PeriodStatus.done) {
+      if (state.settings.frequency == Frequency.daily) return l.todayDoneDaily;
       final next = state.schedule.nextDueAfter(current.period.start);
-      if (state.settings.frequency == Frequency.daily) {
-        return 'Fatto per oggi, ci vediamo domani';
-      }
-      return 'Fatto! Prossima misura ${formatWeekdayDayMonth(next)}';
+      return l.todayDoneNext(dates.weekdayDayMonth(next));
     }
-    if (current.period.start == dateOnly(now)) {
-      return 'Oggi è il giorno della misura';
-    }
-    return 'Manca la misura di ${weekdayName(current.period.start.weekday)} '
-        '${current.period.start.day}';
+    if (current.period.start == dateOnly(now)) return l.todayIsTheDay;
+    return l.todayMissing(dates.weekdayDayMonth(current.period.start));
   }
 
-  String? _encouragement(AppState state) {
+  /// "Oggi chiudi settembre al completo." when today's reading would
+  /// complete the month.
+  String? _encouragement(AppState state, AppLocalizations l, Dates dates) {
     final tracker = state.tracker;
     final current = tracker.current;
     if (current == null || tracker.currentDone) return null;
-    // Would today's reading complete the month?
     final month = current.period.start.month;
     final next = state.schedule.nextDueAfter(current.period.start);
     final sameMonth = tracker.periods.where(
@@ -148,18 +145,20 @@ class _HabitCard extends StatelessWidget {
         ? current.period.start == firstDue
         : sameMonth.first.period.start == firstDue;
     if (next.month != month && allDone && coversMonth) {
-      return 'Oggi chiudi ${monthName(month)} al completo.';
+      return l.todayCompleteMonth(dates.monthName(month));
     }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final dates = context.dates;
     final state = AppScope.of(context);
     final tracker = state.tracker;
     final schedule = state.schedule;
     final streak = tracker.currentStreak;
-    final extra = _encouragement(state);
+    final extra = _encouragement(state, l, dates);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
@@ -171,8 +170,10 @@ class _HabitCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'La tua abitudine · ${schedule.describe()} '
-            '${partOfDay(state.settings.reminderHour)}',
+            l.habitCardSubtitle(
+              schedule.describe(l),
+              l.partOfDay(partOfDayKey(state.settings.reminderHour)),
+            ),
             style: AppText.body(
               13,
               weight: FontWeight.w700,
@@ -183,7 +184,7 @@ class _HabitCard extends StatelessWidget {
           Semantics(
             header: true,
             child: Text(
-              _title(state),
+              _title(state, l, dates),
               style: AppText.display(
                 28,
                 color: Colors.white,
@@ -204,10 +205,7 @@ class _HabitCard extends StatelessWidget {
                     children: [
                       if (streak > 0)
                         TextSpan(
-                          text:
-                              '$streak '
-                              '${streak == 1 ? schedule.occasionSingular : schedule.occasionPlural}'
-                              ' di fila.',
+                          text: '${schedule.inARow(l, streak)}.',
                           style: AppText.body(
                             13,
                             weight: FontWeight.w800,
@@ -215,9 +213,7 @@ class _HabitCard extends StatelessWidget {
                           ),
                         )
                       else
-                        const TextSpan(
-                          text: 'Ogni misura conta: inizia una serie.',
-                        ),
+                        TextSpan(text: l.todayStartStreak),
                       if (extra != null) TextSpan(text: ' $extra'),
                     ],
                   ),
@@ -248,7 +244,7 @@ class _HabitCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Traguardi',
+                            l.achievements,
                             style: AppText.body(
                               12,
                               weight: FontWeight.w800,
@@ -274,7 +270,7 @@ class _HabitCard extends StatelessWidget {
                     foregroundColor: AppColors.primary,
                   ),
                   icon: const Icon(Icons.photo_camera_outlined, size: 22),
-                  label: const Text('Fotografa'),
+                  label: Text(l.takePhoto),
                 ),
               ),
               const SizedBox(width: 10),
@@ -294,7 +290,7 @@ class _HabitCard extends StatelessWidget {
                     textStyle: AppText.body(15, weight: FontWeight.w800),
                   ),
                   icon: const Icon(Icons.edit_outlined, size: 22),
-                  label: const Text('A mano'),
+                  label: Text(l.byHand),
                 ),
               ),
             ],
@@ -320,7 +316,7 @@ class _PeriodDots extends StatelessWidget {
         )
         .length;
     return Semantics(
-      label: 'Ultime ${periods.length} volte: $done misurate, $missed saltate',
+      label: context.l10n.periodDotsLabel(periods.length, done, missed),
       excludeSemantics: true,
       child: Row(
         children: [
@@ -335,8 +331,7 @@ class _PeriodDots extends StatelessWidget {
 
   Widget _dot(TrackedPeriod? p) {
     const height = 10.0;
-    final status = p?.status;
-    return switch (status) {
+    return switch (p?.status) {
       PeriodStatus.done => Container(
         height: height,
         decoration: BoxDecoration(
@@ -375,17 +370,16 @@ class _LastReadingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final state = AppScope.of(context);
     final list = state.measurements;
     final last = list.last;
     final before = list.length > 1 ? list[list.length - 2] : null;
     final parts = [
-      if (last.pulse != null) 'Polso ${last.pulse}',
+      if (last.pulse != null) l.pulseValue(last.pulse!),
       if (before != null)
-        'la volta prima ${before.systolic}/${before.diastolic}',
-      state.thresholds.isEsc2024
-          ? 'fascia secondo le linee guida europee ESC 2024'
-          : 'fascia secondo le tue soglie',
+        l.previousValue('${before.systolic}/${before.diastolic}'),
+      state.thresholds.isEsc2024 ? l.bandByEsc : l.bandByCustom,
     ];
     return AppCard(
       radius: 24,
@@ -398,7 +392,7 @@ class _LastReadingCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Ultima misura · ${formatWeekdayDayMonth(last.takenAt)}',
+                  l.lastReadingOn(context.dates.weekdayDayMonth(last.takenAt)),
                   style: AppText.body(
                     14,
                     weight: FontWeight.w700,
@@ -427,6 +421,7 @@ class _TrendCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final state = AppScope.of(context);
     final now = state.now();
     final from = DateTime(now.year, now.month - 6, now.day);
@@ -447,18 +442,18 @@ class _TrendCard extends StatelessWidget {
                 child: Semantics(
                   header: true,
                   child: Text(
-                    'Ultimi 6 mesi',
+                    l.last6Months,
                     style: AppText.body(16, weight: FontWeight.w800),
                   ),
                 ),
               ),
               TextButton(
                 onPressed: () => HomeShell.select(context, HomeShell.trends),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Andamento'),
-                    Icon(Icons.chevron_right_rounded, size: 18),
+                    Text(l.navTrends),
+                    const Icon(Icons.chevron_right_rounded, size: 18),
                   ],
                 ),
               ),
@@ -486,16 +481,13 @@ class _TrendCard extends StatelessWidget {
               spacing: 14,
               runSpacing: 6,
               children: [
-                _legend(const _DotLegend(), 'Misura singola'),
-                _legend(const _LineLegend(), 'Media ultime 4'),
-                _legend(const _LineLegend(dashed: true), 'Soglia'),
+                _legend(const _DotLegend(), l.legendSingle),
+                _legend(const _LineLegend(), l.legendAvg4),
+                _legend(const _LineLegend(dashed: true), l.legendThreshold),
               ],
             ),
           ] else
-            Text(
-              'Dopo qualche misura qui vedrai come cambia la tua pressione.',
-              style: AppText.body(13, color: AppColors.muted),
-            ),
+            Text(l.trendEmpty, style: AppText.body(13, color: AppColors.muted)),
         ],
       ),
     );
@@ -560,27 +552,30 @@ class QuarterRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final dates = context.dates;
     final q = quarters;
     final down = q.deltaSystolic <= 0 && q.deltaDiastolic <= 0;
     final up = q.deltaSystolic > 0 && q.deltaDiastolic >= 0;
     final valueSize = compact ? 22.0 : 30.0;
 
-    Widget side(DateTime from, DateTime to, BpAverage avg) => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          compact
-              ? formatMonthRange(from, to)
-              : '${formatMonthRange(from, to)} · ${avg.count} misure',
-          style: AppText.body(
-            12,
-            weight: FontWeight.w700,
-            color: AppColors.muted,
+    Widget side(DateTime from, DateTime to, BpAverage avg) {
+      final range = dates.monthRange(from, to);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            compact ? range : l.quarterSide(range, l.readingsCount(avg.count)),
+            style: AppText.body(
+              12,
+              weight: FontWeight.w700,
+              color: AppColors.muted,
+            ),
           ),
-        ),
-        Text('$avg', style: AppText.display(valueSize, tabular: true)),
-      ],
-    );
+          Text('$avg', style: AppText.display(valueSize, tabular: true)),
+        ],
+      );
+    }
 
     return Row(
       children: [
@@ -639,6 +634,7 @@ class _EmptyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final t = AppScope.of(context).thresholds;
     return AppCard(
       radius: 24,
@@ -646,15 +642,10 @@ class _EmptyCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Ancora nessuna misura',
-            style: AppText.body(16, weight: FontWeight.w800),
-          ),
+          Text(l.emptyTitle, style: AppText.body(16, weight: FontWeight.w800)),
           const SizedBox(height: 6),
           Text(
-            'Siediti con la schiena appoggiata, riposa cinque minuti e misura '
-            'al braccio con il bracciale all’altezza del cuore. Poi segna i '
-            'valori qui: fascia, grafici e report si costruiscono da soli.',
+            l.emptyBody,
             style: AppText.body(
               14,
               weight: FontWeight.w500,
@@ -669,7 +660,7 @@ class _EmptyCard extends StatelessWidget {
             children: [
               for (final c in BpCategory.values)
                 Pill(
-                  label: c.rangeLabel(t),
+                  label: c.rangeLabel(l, t),
                   background: c.chipBackground,
                   foreground: c.chipForeground,
                 ),

@@ -1,37 +1,54 @@
 import '../models/measurement.dart';
 import '../models/settings.dart';
 import 'bp_category.dart';
-import 'formatting.dart';
 import 'schedule.dart';
 import 'stats.dart';
 
 enum BadgeGroup { consistency, habits, trend }
 
-/// One achievement, unlocked or with its progress.
+/// One achievement, unlocked or with its progress. Titles and details are
+/// worded by `achievementTitle` / `achievementDetail` in `lib/l10n`.
 class Achievement {
   const Achievement({
     required this.id,
     required this.group,
-    required this.title,
     required this.unlocked,
-    required this.detail,
     this.unlockedAt,
     this.progress = 0,
     this.count = 0,
+    this.value = 0,
+    this.target = 0,
+    this.month,
+    this.average,
+    this.deltaSystolic,
+    this.deltaDiastolic,
+    this.unlocksOn,
   });
 
   final String id;
   final BadgeGroup group;
-  final String title;
   final bool unlocked;
   final DateTime? unlockedAt;
-
-  /// Date of unlock, or progress such as "6 su 26".
-  final String detail;
   final double progress;
 
   /// For repeatable badges ("Mese completo ×5").
   final int count;
+
+  /// Progress so far and goal ("6 su 26"); for "Mese completo" the number of
+  /// readings in the last complete month.
+  final int value;
+  final int target;
+
+  /// Month the detail refers to ("settembre, 4 su 4", "agosto 128/81").
+  final DateTime? month;
+  final BpAverage? average;
+
+  /// Change between quarters, for "Tendenza in calo".
+  final int? deltaSystolic;
+  final int? deltaDiastolic;
+
+  /// Day the badge will unlock if things stay as they are.
+  final DateTime? unlocksOn;
 
   /// Changes whenever the badge is unlocked again.
   String get key => '$id:$count';
@@ -48,7 +65,7 @@ class AchievementsReport {
   AchievementsReport({
     required this.badges,
     required this.bestStreak,
-    required this.bestStreakRange,
+    required this.bestStreakPeriods,
     required this.lowestMonth,
     required this.completeMonths,
     required this.monthsTracked,
@@ -56,7 +73,9 @@ class AchievementsReport {
 
   final List<Achievement> badges;
   final int bestStreak;
-  final String? bestStreakRange;
+
+  /// First and last period of the best streak.
+  final List<Period>? bestStreakPeriods;
   final MonthGroup? lowestMonth;
   final int completeMonths;
   final int monthsTracked;
@@ -77,28 +96,21 @@ class AchievementsReport {
   }
 }
 
-String _when(DateTime d, DateTime now) =>
-    dateOnly(d) == dateOnly(now) ? 'oggi' : formatDayMonthShort(d);
-
 Achievement _progressBadge({
   required String id,
   required BadgeGroup group,
-  required String title,
   required int value,
   required int target,
   DateTime? unlockedAt,
-  required DateTime now,
 }) {
   final unlocked = value >= target || unlockedAt != null;
   return Achievement(
     id: id,
     group: group,
-    title: title,
     unlocked: unlocked,
     unlockedAt: unlocked ? unlockedAt : null,
-    detail: unlocked && unlockedAt != null
-        ? _when(unlockedAt, now)
-        : '${value.clamp(0, target)} su $target',
+    value: value,
+    target: target,
     progress: (value / target).clamp(0, 1).toDouble(),
   );
 }
@@ -114,7 +126,7 @@ DateTime? _streakReached(HabitTracker t, int n) {
 }
 
 /// Months whose due periods were all measured, oldest first.
-List<({int year, int month, int count, DateTime completedAt})> _completeMonths(
+List<({DateTime month, int count, DateTime completedAt})> _completeMonths(
   HabitTracker t,
 ) {
   final schedule = t.schedule;
@@ -127,7 +139,7 @@ List<({int year, int month, int count, DateTime completedAt})> _completeMonths(
         )
         .add(p);
   }
-  final result = <({int year, int month, int count, DateTime completedAt})>[];
+  final result = <({DateTime month, int count, DateTime completedAt})>[];
   for (final entry in byMonth.entries) {
     final list = entry.value;
     final year = entry.key ~/ 12;
@@ -139,8 +151,7 @@ List<({int year, int month, int count, DateTime completedAt})> _completeMonths(
         (afterLast.month != month || afterLast.year != year);
     if (covers && list.every((p) => p.status == PeriodStatus.done)) {
       result.add((
-        year: year,
-        month: month,
+        month: DateTime(year, month),
         count: list.length,
         completedAt: list.last.measurements.first.takenAt,
       ));
@@ -165,45 +176,38 @@ AchievementsReport computeAchievements({
     Achievement(
       id: 'first_step',
       group: BadgeGroup.consistency,
-      title: 'Primo passo',
       unlocked: sorted.isNotEmpty,
-      unlockedAt: sorted.isEmpty ? null : sorted.first.takenAt,
-      detail: sorted.isEmpty ? '0 su 1' : _when(sorted.first.takenAt, now),
+      unlockedAt: sorted.firstOrNull?.takenAt,
+      value: sorted.isEmpty ? 0 : 1,
+      target: 1,
       progress: sorted.isEmpty ? 0 : 1,
     ),
   );
 
-  for (final (id, title, days) in [
-    ('two_months', 'Due mesi di fila', 56),
-    ('three_months', 'Tre mesi di fila', 91),
-  ]) {
+  for (final (id, days) in [('two_months', 56), ('three_months', 91)]) {
     final n = schedule.periodsFor(days);
     badges.add(
       _progressBadge(
         id: id,
         group: BadgeGroup.consistency,
-        title: title,
         value: tracker.currentStreak,
         target: n,
         unlockedAt: _streakReached(tracker, n),
-        now: now,
       ),
     );
   }
 
   final halfYear = schedule.periodsFor(182);
-  final diaryAge = tracker.elapsed.length;
+  final elapsed = tracker.elapsed.toList();
   badges.add(
     _progressBadge(
       id: 'six_months',
       group: BadgeGroup.consistency,
-      title: 'Sei mesi di diario',
-      value: diaryAge,
+      value: elapsed.length,
       target: halfYear,
-      unlockedAt: diaryAge >= halfYear
-          ? tracker.periods[halfYear - 1].period.start
+      unlockedAt: elapsed.length >= halfYear
+          ? elapsed[halfYear - 1].period.start
           : null,
-      now: now,
     ),
   );
 
@@ -212,13 +216,10 @@ AchievementsReport computeAchievements({
     Achievement(
       id: 'month_complete',
       group: BadgeGroup.consistency,
-      title: 'Mese completo',
       unlocked: complete.isNotEmpty,
-      unlockedAt: complete.isEmpty ? null : complete.last.completedAt,
-      detail: complete.isEmpty
-          ? 'tutte le misure di un mese'
-          : '${monthName(complete.last.month)}, '
-                '${complete.last.count} su ${complete.last.count}',
+      unlockedAt: complete.lastOrNull?.completedAt,
+      month: complete.lastOrNull?.month,
+      value: complete.lastOrNull?.count ?? 0,
       progress: complete.isEmpty ? 0 : 1,
       count: complete.length,
     ),
@@ -235,14 +236,8 @@ AchievementsReport computeAchievements({
     Achievement(
       id: 'comeback',
       group: BadgeGroup.consistency,
-      title: 'Ripartenza',
       unlocked: comeback != null,
       unlockedAt: comeback?.measurements.first.takenAt,
-      detail: comeback == null
-          ? 'riprendi dopo una pausa'
-          : '${_when(comeback.measurements.first.takenAt, now)}, '
-                'dopo la pausa',
-      progress: 0,
     ),
   );
 
@@ -250,11 +245,9 @@ AchievementsReport computeAchievements({
     _progressBadge(
       id: 'no_pause',
       group: BadgeGroup.consistency,
-      title: 'Mezzo anno senza pause',
       value: tracker.currentStreak,
       target: halfYear,
       unlockedAt: _streakReached(tracker, halfYear),
-      now: now,
     ),
   );
 
@@ -265,23 +258,17 @@ AchievementsReport computeAchievements({
     Achievement(
       id: 'beat_record',
       group: BadgeGroup.consistency,
-      title: 'Batti il record',
       unlocked: tracker.recordBeatenAt != null,
       unlockedAt: tracker.recordBeatenAt,
-      detail: tracker.recordBeatenAt != null
-          ? _when(tracker.recordBeatenAt!, now)
-          : toBeat == 0
-          ? 'dopo la prima serie'
-          : '${tracker.currentStreak} su $toBeat',
-      progress: toBeat == 0 ? 0 : (tracker.currentStreak / toBeat).clamp(0, 1),
+      value: tracker.currentStreak,
+      target: toBeat,
+      progress: toBeat == 0
+          ? 0
+          : (tracker.currentStreak / toBeat).clamp(0, 1).toDouble(),
     ),
   );
 
   final year = schedule.periodsFor(364);
-  final yearTitle = switch (settings.frequency) {
-    Frequency.daily || Frequency.fewTimesWeek => 'Un anno di misure',
-    _ => 'Un anno di ${schedule.occasionPlural}',
-  };
   final done = tracker.periods
       .where((p) => p.status == PeriodStatus.done)
       .toList();
@@ -289,13 +276,11 @@ AchievementsReport computeAchievements({
     _progressBadge(
       id: 'year',
       group: BadgeGroup.consistency,
-      title: yearTitle,
       value: done.length,
       target: year,
       unlockedAt: done.length >= year
           ? done[year - 1].measurements.first.takenAt
           : null,
-      now: now,
     ),
   );
 
@@ -307,11 +292,8 @@ AchievementsReport computeAchievements({
     Achievement(
       id: 'honest',
       group: BadgeGroup.habits,
-      title: 'Diario sincero',
       unlocked: firstHigh != null,
       unlockedAt: firstHigh?.takenAt,
-      detail: 'registri anche i giorni no',
-      progress: 0,
     ),
   );
 
@@ -323,11 +305,9 @@ AchievementsReport computeAchievements({
     _progressBadge(
       id: 'lynx',
       group: BadgeGroup.habits,
-      title: 'Occhio di lince',
       value: photos.length,
       target: 10,
       unlockedAt: nth(photos, 10),
-      now: now,
     ),
   );
 
@@ -335,12 +315,8 @@ AchievementsReport computeAchievements({
     Achievement(
       id: 'first_pdf',
       group: BadgeGroup.habits,
-      title: 'Primo PDF condiviso',
       unlocked: settings.shares.isNotEmpty,
       unlockedAt: settings.shares.firstOrNull,
-      detail: settings.shares.isEmpty
-          ? 'esporta il diario'
-          : _when(settings.shares.first, now),
     ),
   );
 
@@ -349,11 +325,9 @@ AchievementsReport computeAchievements({
     _progressBadge(
       id: 'notes',
       group: BadgeGroup.habits,
-      title: 'Note che aiutano',
       value: notes.length,
       target: 10,
       unlockedAt: nth(notes, 10),
-      now: now,
     ),
   );
 
@@ -362,11 +336,9 @@ AchievementsReport computeAchievements({
     _progressBadge(
       id: 'double',
       group: BadgeGroup.habits,
-      title: 'Doppia lettura',
       value: doubles.length,
       target: 5,
       unlockedAt: nth(doubles, 5),
-      now: now,
     ),
   );
 
@@ -374,18 +346,15 @@ AchievementsReport computeAchievements({
   final months = groupByMonth(sorted).reversed.toList(); // oldest first
   final currentMonthStart = DateTime(now.year, now.month);
   final closed = months.where((g) => g.start.isBefore(currentMonthStart));
-  final belowMonths = closed.where((g) => g.avg!.isBelow(t)).toList();
-  final lastBelow = belowMonths.lastOrNull;
+  final lastBelow = closed.where((g) => g.avg!.isBelow(t)).lastOrNull;
   badges.add(
     Achievement(
       id: 'month_below',
       group: BadgeGroup.trend,
-      title: 'Mese sotto soglia',
       unlocked: lastBelow != null,
       unlockedAt: lastBelow?.end,
-      detail: lastBelow == null
-          ? 'media del mese sotto ${t.highSystolic}/${t.highDiastolic}'
-          : '${monthName(lastBelow.month)} ${lastBelow.avg}',
+      month: lastBelow?.start,
+      average: lastBelow?.avg,
     ),
   );
 
@@ -398,18 +367,14 @@ AchievementsReport computeAchievements({
     Achievement(
       id: 'trend_down',
       group: BadgeGroup.trend,
-      title: 'Tendenza in calo',
       unlocked: falling,
-      detail: quarters.hasBoth
-          ? '${signed(quarters.deltaSystolic)}/'
-                '${signed(quarters.deltaDiastolic)} tra trimestri'
-          : 'servono due trimestri',
+      deltaSystolic: quarters.hasBoth ? quarters.deltaSystolic : null,
+      deltaDiastolic: quarters.hasBoth ? quarters.deltaDiastolic : null,
     ),
   );
 
   // Three consecutive closed months below the threshold.
   var run = 0;
-  var bestRun = 0;
   DateTime? quarterAt;
   MonthGroup? previous;
   for (final g in closed) {
@@ -417,7 +382,6 @@ AchievementsReport computeAchievements({
         previous != null &&
         DateTime(previous.year, previous.month + 1) == g.start;
     run = g.avg!.isBelow(t) ? (consecutive ? run + 1 : 1) : 0;
-    if (run > bestRun) bestRun = run;
     if (run >= 3) quarterAt ??= g.end;
     previous = g;
   }
@@ -429,24 +393,19 @@ AchievementsReport computeAchievements({
       DateTime(closed.last.year, closed.last.month + 1) == currentMonthStart;
   final almost =
       quarterAt == null && run == 2 && lastClosedIsPrevious && currentBelow;
-  final lastDay = DateTime(now.year, now.month + 1, 0);
   badges.add(
     Achievement(
       id: 'quarter_below',
       group: BadgeGroup.trend,
-      title: 'Trimestre sotto soglia',
       unlocked: quarterAt != null,
       unlockedAt: quarterAt,
-      detail: quarterAt != null
-          ? 'da ${formatDayMonthShort(quarterAt)}'
-          : almost
-          ? 'si sblocca il ${lastDay.day}'
-          : '${run.clamp(0, 3)} su 3',
+      value: run.clamp(0, 3),
+      target: 3,
+      unlocksOn: almost ? DateTime(now.year, now.month + 1, 0) : null,
       progress: quarterAt != null ? 1 : (almost ? 0.9 : run / 3),
     ),
   );
 
-  final range = tracker.bestStreakPeriods;
   MonthGroup? lowest;
   for (final g in months) {
     if (lowest == null ||
@@ -459,9 +418,7 @@ AchievementsReport computeAchievements({
   return AchievementsReport(
     badges: badges,
     bestStreak: tracker.bestStreak,
-    bestStreakRange: range == null
-        ? null
-        : formatMonthRange(range.first.start, range.last.start),
+    bestStreakPeriods: tracker.bestStreakPeriods,
     lowestMonth: lowest,
     completeMonths: complete.length,
     monthsTracked: _monthsTouched(tracker),

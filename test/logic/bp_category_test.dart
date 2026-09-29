@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:presssure/l10n/l10n.dart';
 import 'package:presssure/logic/bp_category.dart';
 import 'package:presssure/models/settings.dart';
+
+import '../helpers.dart';
 
 void main() {
   const esc = Thresholds.esc2024;
@@ -32,12 +35,18 @@ void main() {
     });
   });
 
-  test('range labels follow the thresholds', () {
-    expect(BpCategory.high.rangeLabel(esc), 'Oltre 135/85');
-    expect(BpCategory.elevated.rangeLabel(esc), 'Elevata (120–134 / 70–84)');
+  test('labels in Italian and English follow the thresholds', () {
+    expect(BpCategory.high.rangeLabel(itL10n, esc), 'Oltre 135/85');
     expect(
-      BpCategory.nonElevated.rangeLabel(esc),
+      BpCategory.elevated.rangeLabel(itL10n, esc),
+      'Elevata (120–134 / 70–84)',
+    );
+    expect(
+      BpCategory.nonElevated.rangeLabel(itL10n, esc),
       'Non elevata (sotto 120/70)',
     );
+    expect(BpCategory.high.rangeLabel(enL10n, esc), 'Above 135/85');
+    expect(BpCategory.elevated.label(enL10n), 'Elevated');
+    expect(BpCategory.elevated.label(itL10n), 'Elevata');
   });
 }

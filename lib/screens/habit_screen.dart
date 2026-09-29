@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../logic/formatting.dart';
+import '../l10n/l10n.dart';
 import '../logic/reminder_plan.dart';
 import '../logic/schedule.dart';
 import '../models/settings.dart';
@@ -28,14 +28,6 @@ class _HabitScreenState extends State<HabitScreen> {
   late bool _monthlySummary;
   var _initialized = false;
 
-  static const _labels = {
-    Frequency.daily: 'Ogni giorno',
-    Frequency.fewTimesWeek: 'Alcune volte a settimana',
-    Frequency.weekly: 'Una volta a settimana',
-    Frequency.biweekly: 'Ogni due settimane',
-    Frequency.monthly: 'Una volta al mese',
-  };
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -50,6 +42,21 @@ class _HabitScreenState extends State<HabitScreen> {
   }
 
   bool get _multiDay => _frequency == Frequency.fewTimesWeek;
+
+  String _label(AppLocalizations l, Frequency f) => switch (f) {
+    Frequency.daily => l.frequencyDaily,
+    Frequency.fewTimesWeek => l.frequencyFewTimesWeek,
+    Frequency.weekly => l.frequencyWeekly,
+    Frequency.biweekly => l.frequencyBiweekly,
+    Frequency.monthly => l.frequencyMonthly,
+  };
+
+  /// Weekdays in the order of the local calendar (Monday or Sunday first).
+  List<int> _weekOrder(BuildContext context) {
+    final first = MaterialLocalizations.of(context).firstDayOfWeekIndex;
+    final start = first == 0 ? DateTime.sunday : first;
+    return [for (var i = 0; i < 7; i++) (start - 1 + i) % 7 + 1];
+  }
 
   void _setFrequency(Frequency f) {
     setState(() {
@@ -78,11 +85,7 @@ class _HabitScreenState extends State<HabitScreen> {
     final picked = await showTimePicker(
       context: context,
       initialTime: _time,
-      helpText: 'Ora del promemoria',
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-        child: child!,
-      ),
+      helpText: context.l10n.habitReminderTime,
     );
     if (picked != null) setState(() => _time = picked);
   }
@@ -113,20 +116,9 @@ class _HabitScreenState extends State<HabitScreen> {
     }
   }
 
-  /// "Così arriva la domenica alle 8".
-  String _previewHeading(DateTime nextDue) {
-    final when = _frequency == Frequency.daily
-        ? 'ogni giorno'
-        : '${nextDue.weekday == DateTime.sunday ? 'la' : 'il'} '
-              '${weekdayName(nextDue.weekday)}';
-    final time = _time.minute == 0
-        ? '${_time.hour}'
-        : '${_time.hour}:${two(_time.minute)}';
-    return 'Così arriva $when alle $time';
-  }
-
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final state = AppScope.of(context);
     final schedule = Schedule(
       frequency: _frequency,
@@ -136,20 +128,23 @@ class _HabitScreenState extends State<HabitScreen> {
     final nextDue = schedule.isDue(state.now())
         ? dateOnly(state.now())
         : schedule.nextDueAfter(state.now());
-    final preview = reminderText(schedule, nextDue, state.latest);
+    final preview = reminderText(l, schedule, nextDue, state.latest);
     final showNextDay =
         _frequency != Frequency.daily && _frequency != Frequency.fewTimesWeek;
+    final time = _time.format(context);
+    final when = _frequency == Frequency.daily
+        ? l.scheduleDaily
+        : l.onWeekday(weekdayKey(nextDue.weekday));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('La tua abitudine'), titleSpacing: 0),
+      appBar: AppBar(title: Text(l.habitTitle), titleSpacing: 0),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
-              'Scegli un ritmo che riesci a mantenere. Promemoria, grafici e '
-              'report si adattano.',
+              l.habitIntro,
               style: AppText.body(14, height: 1.5, color: AppColors.muted),
             ),
           ),
@@ -159,7 +154,7 @@ class _HabitScreenState extends State<HabitScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _CardTitle('Ogni quanto misuri?'),
+                _CardTitle(l.habitHowOften),
                 RadioGroup<Frequency>(
                   groupValue: _frequency,
                   onChanged: (f) => _setFrequency(f!),
@@ -171,7 +166,7 @@ class _HabitScreenState extends State<HabitScreen> {
                           contentPadding: EdgeInsets.zero,
                           controlAffinity: ListTileControlAffinity.trailing,
                           title: Text(
-                            _labels[f]!,
+                            _label(l, f),
                             style: AppText.body(
                               15,
                               weight: f == _frequency
@@ -194,24 +189,20 @@ class _HabitScreenState extends State<HabitScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _CardTitle('Quando'),
+                _CardTitle(l.habitWhen),
                 if (_frequency != Frequency.daily) ...[
                   const SizedBox(height: 8),
                   Text(
-                    _multiDay
-                        ? 'Scegli almeno due giorni'
-                        : schedule.describe(),
+                    _multiDay ? l.habitPickTwoDays : schedule.describe(l),
                     style: AppText.body(13, color: AppColors.muted),
                   ),
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      for (var d = DateTime.monday; d <= DateTime.sunday; d++)
+                      for (final (i, d) in _weekOrder(context).indexed)
                         Expanded(
                           child: Padding(
-                            padding: EdgeInsets.only(
-                              right: d == DateTime.sunday ? 0 : 6,
-                            ),
+                            padding: EdgeInsets.only(left: i == 0 ? 0 : 6),
                             child: _DayButton(
                               day: d,
                               selected: _weekdays.contains(d),
@@ -226,10 +217,7 @@ class _HabitScreenState extends State<HabitScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        'Ora del promemoria',
-                        style: AppText.body(15),
-                      ),
+                      child: Text(l.habitReminderTime, style: AppText.body(15)),
                     ),
                     OutlinedButton(
                       onPressed: _pickTime,
@@ -246,9 +234,8 @@ class _HabitScreenState extends State<HabitScreen> {
                         textStyle: AppText.body(16, weight: FontWeight.w800),
                       ),
                       child: Text(
-                        '${two(_time.hour)}:${two(_time.minute)}',
-                        semanticsLabel:
-                            'Ora del promemoria ${_time.hour}:${two(_time.minute)}',
+                        time,
+                        semanticsLabel: '${l.habitReminderTime} $time',
                       ),
                     ),
                   ],
@@ -262,18 +249,17 @@ class _HabitScreenState extends State<HabitScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _CardTitle('Per non perdere il filo'),
+                _CardTitle(l.habitKeepOnTrack),
                 if (showNextDay)
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     value: _remindNextDay,
                     onChanged: (v) => setState(() => _remindNextDay = v),
-                    title: Text(
-                      'Se salto, ricordamelo il giorno dopo',
-                      style: AppText.body(15),
-                    ),
+                    title: Text(l.habitRemindNextDay, style: AppText.body(15)),
                     subtitle: Text(
-                      'Una sola volta, poi aspetta ${schedule.frequency == Frequency.monthly ? 'il mese dopo' : 'la prossima misura'}',
+                      _frequency == Frequency.monthly
+                          ? l.habitRemindNextDayHintMonthly
+                          : l.habitRemindNextDayHint,
                       style: AppText.body(
                         13,
                         weight: FontWeight.w500,
@@ -285,9 +271,9 @@ class _HabitScreenState extends State<HabitScreen> {
                   contentPadding: EdgeInsets.zero,
                   value: _monthlySummary,
                   onChanged: (v) => setState(() => _monthlySummary = v),
-                  title: Text('Riepilogo a fine mese', style: AppText.body(15)),
+                  title: Text(l.habitMonthlySummary, style: AppText.body(15)),
                   subtitle: Text(
-                    'Es. «Settembre: 4 misure, media 125/80»',
+                    l.habitMonthlySummaryHint,
                     style: AppText.body(
                       13,
                       weight: FontWeight.w500,
@@ -302,7 +288,7 @@ class _HabitScreenState extends State<HabitScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
-              _previewHeading(nextDue).toUpperCase(),
+              l.habitPreviewHeading(when, time).toUpperCase(),
               style: AppText.body(
                 13,
                 weight: FontWeight.w800,
@@ -315,7 +301,7 @@ class _HabitScreenState extends State<HabitScreen> {
           _NotificationPreview(
             title: preview.title,
             body: preview.body,
-            time: '${two(_time.hour)}:${two(_time.minute)}',
+            time: time,
           ),
           const SizedBox(height: 22),
           FilledButton(
@@ -327,7 +313,7 @@ class _HabitScreenState extends State<HabitScreen> {
               ),
               textStyle: AppText.body(16, weight: FontWeight.w800),
             ),
-            child: Text(widget.onboarding ? 'Salva e inizia' : 'Salva'),
+            child: Text(widget.onboarding ? l.habitSaveAndStart : l.save),
           ),
         ],
       ),
@@ -360,8 +346,9 @@ class _DayButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dates = context.dates;
     return Semantics(
-      label: capitalize(weekdayName(day)),
+      label: capitalize(dates.weekdayLong(day)),
       selected: selected,
       button: true,
       excludeSemantics: true,
@@ -380,7 +367,7 @@ class _DayButton extends StatelessWidget {
             height: 44,
             child: Center(
               child: Text(
-                weekdayInitials[day - 1],
+                dates.weekdayNarrow(day).toUpperCase(),
                 style: AppText.body(
                   14,
                   weight: selected ? FontWeight.w800 : FontWeight.w700,
@@ -435,7 +422,7 @@ class _NotificationPreview extends StatelessWidget {
                 const LogoMark(size: 22),
                 const SizedBox(width: 8),
                 Text(
-                  'PressSure · $time',
+                  '${context.l10n.appTitle} · $time',
                   style: AppText.body(12, color: AppColors.muted),
                 ),
               ],

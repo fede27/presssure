@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../logic/bp_category.dart';
 import '../theme.dart';
 
@@ -51,7 +52,7 @@ class CategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Pill(
-      label: category.label,
+      label: category.label(context.l10n),
       background: category.chipBackground,
       foreground: category.chipForeground,
     );
@@ -135,7 +136,7 @@ class BpValue extends StatelessWidget {
     );
     // Scales down instead of overflowing with large system text.
     return Semantics(
-      label: '$systolic su $diastolic millimetri di mercurio',
+      label: context.l10n.bpSemantics(systolic, diastolic),
       excludeSemantics: true,
       child: FittedBox(
         fit: BoxFit.scaleDown,

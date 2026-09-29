@@ -1,6 +1,5 @@
 import '../models/measurement.dart';
 import '../models/settings.dart';
-import 'formatting.dart';
 
 DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
@@ -51,22 +50,23 @@ class Schedule {
   final Set<int> weekdays;
   final DateTime anchor;
 
-  int get _day => weekdays.first;
+  /// The chosen weekday (the first one for [Frequency.fewTimesWeek]).
+  int get day => weekdays.first;
 
-  bool isDue(DateTime day) {
+  bool isDue(DateTime date) {
     switch (frequency) {
       case Frequency.daily:
         return true;
       case Frequency.fewTimesWeek:
-        return weekdays.contains(day.weekday);
+        return weekdays.contains(date.weekday);
       case Frequency.weekly:
-        return day.weekday == _day;
+        return date.weekday == day;
       case Frequency.biweekly:
-        if (day.weekday != _day) return false;
-        final firstDue = addDays(anchor, (_day - anchor.weekday) % 7);
-        return (daysBetween(firstDue, day) ~/ 7) % 2 == 0;
+        if (date.weekday != day) return false;
+        final firstDue = addDays(anchor, (day - anchor.weekday) % 7);
+        return (daysBetween(firstDue, date) ~/ 7) % 2 == 0;
       case Frequency.monthly:
-        return day.weekday == _day && day.day <= 7;
+        return date.weekday == day && date.day <= 7;
     }
   }
 
@@ -118,41 +118,6 @@ class Schedule {
 
   /// How many periods cover roughly [days] days.
   int periodsFor(int days) => (days / periodDays).round().clamp(1, 100000);
-
-  /// "domeniche", "giorni" or "misure": what a period is called in copy.
-  String get occasionPlural => switch (frequency) {
-    Frequency.daily => 'giorni',
-    Frequency.fewTimesWeek => 'misure',
-    _ => weekdayPlural(_day),
-  };
-
-  /// "domenica", "giorno" or "misura".
-  String get occasionSingular => switch (frequency) {
-    Frequency.daily => 'giorno',
-    Frequency.fewTimesWeek => 'misura',
-    _ => weekdayName(_day),
-  };
-
-  /// "ogni domenica", "ogni giorno", "lunedì e giovedì"...
-  String describe() {
-    switch (frequency) {
-      case Frequency.daily:
-        return 'ogni giorno';
-      case Frequency.fewTimesWeek:
-        final days = weekdays.toList()..sort();
-        final names = days.map(weekdayName).toList();
-        if (names.length == 1) return 'ogni ${names.first}';
-        return '${names.sublist(0, names.length - 1).join(', ')} '
-            'e ${names.last}';
-      case Frequency.weekly:
-        return 'ogni ${weekdayName(_day)}';
-      case Frequency.biweekly:
-        return 'ogni due ${weekdayPlural(_day)}';
-      case Frequency.monthly:
-        final first = _day == DateTime.sunday ? 'la prima' : 'il primo';
-        return '$first ${weekdayName(_day)} del mese';
-    }
-  }
 }
 
 enum PeriodStatus { done, missed, jolly, pending }

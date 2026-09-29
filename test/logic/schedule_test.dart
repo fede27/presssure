@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:presssure/l10n/l10n.dart';
 import 'package:presssure/logic/schedule.dart';
 import 'package:presssure/models/settings.dart';
 
@@ -15,15 +16,18 @@ void main() {
       expect(s.isDue(DateTime(2026, 9, 28)), isFalse);
       expect(s.dueOnOrBefore(DateTime(2026, 9, 30)), DateTime(2026, 9, 27));
       expect(s.nextDueAfter(DateTime(2026, 9, 27)), DateTime(2026, 10, 4));
-      expect(s.describe(), 'ogni domenica');
-      expect(s.occasionPlural, 'domeniche');
+      expect(s.describe(itL10n), 'ogni domenica');
+      expect(s.occasions(itL10n, 2), 'domeniche');
+      expect(s.describe(enL10n), 'every Sunday');
+      expect(s.inARow(enL10n, 1), '1 Sunday in a row');
+      expect(s.inARow(itL10n, 5), '5 domeniche di fila');
     });
 
     test('daily is always due', () {
       final s = Schedule(frequency: Frequency.daily, weekdays: {});
       expect(s.isDue(DateTime(2026, 9, 28)), isTrue);
       expect(s.nextDueAfter(DateTime(2026, 9, 28, 20)), DateTime(2026, 9, 29));
-      expect(s.describe(), 'ogni giorno');
+      expect(s.describe(itL10n), 'ogni giorno');
     });
 
     test('few times a week uses all selected days', () {
@@ -34,7 +38,8 @@ void main() {
       expect(s.isDue(DateTime(2026, 9, 28)), isTrue); // Monday
       expect(s.isDue(DateTime(2026, 10, 1)), isTrue); // Thursday
       expect(s.isDue(DateTime(2026, 9, 29)), isFalse);
-      expect(s.describe(), 'lunedì e giovedì');
+      expect(s.describe(itL10n), 'lunedì e giovedì');
+      expect(s.describe(enL10n), 'Mondays and Thursdays');
     });
 
     test('biweekly alternates weeks from the anchor', () {
@@ -57,7 +62,8 @@ void main() {
       expect(s.isDue(DateTime(2026, 9, 6)), isTrue);
       expect(s.isDue(DateTime(2026, 9, 13)), isFalse);
       expect(s.nextDueAfter(DateTime(2026, 9, 6)), DateTime(2026, 10, 4));
-      expect(s.describe(), 'la prima domenica del mese');
+      expect(s.describe(itL10n), 'la prima domenica del mese');
+      expect(s.describe(enL10n), 'the first Sunday of the month');
     });
 
     test('periods are contiguous windows between due days', () {

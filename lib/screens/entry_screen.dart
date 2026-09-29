@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n.dart';
 import '../logic/bp_category.dart';
-import '../logic/formatting.dart';
 import '../models/measurement.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
@@ -99,26 +99,30 @@ class _EntryScreenState extends State<EntryScreen> {
 
   int? _int(TextEditingController c) => int.tryParse(c.text.trim());
 
-  String? _sysError(TextEditingController sys, TextEditingController dia) {
+  String? _sysError(
+    AppLocalizations l,
+    TextEditingController sys,
+    TextEditingController dia,
+  ) {
     final v = _int(sys);
-    if (v == null) return 'Inserisci la sistolica';
-    if (v < 60 || v > 260) return 'Tra 60 e 260';
+    if (v == null) return l.errSysRequired;
+    if (v < 60 || v > 260) return l.errRange(60, 260);
     final d = _int(dia);
-    if (d != null && v <= d) return 'Deve superare la diastolica';
+    if (d != null && v <= d) return l.errSysAboveDia;
     return null;
   }
 
-  String? _diaError(TextEditingController dia) {
+  String? _diaError(AppLocalizations l, TextEditingController dia) {
     final v = _int(dia);
-    if (v == null) return 'Inserisci la diastolica';
-    if (v < 30 || v > 160) return 'Tra 30 e 160';
+    if (v == null) return l.errDiaRequired;
+    if (v < 30 || v > 160) return l.errRange(30, 160);
     return null;
   }
 
-  String? _pulseError(TextEditingController pulse) {
+  String? _pulseError(AppLocalizations l, TextEditingController pulse) {
     if (pulse.text.trim().isEmpty) return null;
     final v = _int(pulse);
-    if (v == null || v < 30 || v > 220) return 'Tra 30 e 220';
+    if (v == null || v < 30 || v > 220) return l.errRange(30, 220);
     return null;
   }
 
@@ -126,24 +130,28 @@ class _EntryScreenState extends State<EntryScreen> {
       _second == _SecondReading.ready &&
       (_sys2.text.isNotEmpty || _dia2.text.isNotEmpty);
 
-  bool get _secondValid =>
-      _sysError(_sys2, _dia2) == null &&
-      _diaError(_dia2) == null &&
-      _pulseError(_pulse2) == null;
+  bool _secondValid(AppLocalizations l) =>
+      _sysError(l, _sys2, _dia2) == null &&
+      _diaError(l, _dia2) == null &&
+      _pulseError(l, _pulse2) == null;
 
-  bool get _valid =>
-      _sysError(_sys, _dia) == null &&
-      _diaError(_dia) == null &&
-      _pulseError(_pulse) == null &&
-      (!_secondFilled || _secondValid);
+  bool _firstValid(AppLocalizations l) =>
+      _sysError(l, _sys, _dia) == null && _diaError(l, _dia) == null;
+
+  bool _valid(AppLocalizations l) =>
+      _firstValid(l) &&
+      _pulseError(l, _pulse) == null &&
+      (!_secondFilled || _secondValid(l));
 
   /// Values to store: the average when a valid second reading was entered.
   /// Call only when the first reading is valid.
-  ({int sys, int dia, int? pulse}) get _values {
+  ({int sys, int dia, int? pulse}) _values(AppLocalizations l) {
     final s1 = _int(_sys)!;
     final d1 = _int(_dia)!;
     final p1 = _int(_pulse);
-    if (!_secondFilled || !_secondValid) return (sys: s1, dia: d1, pulse: p1);
+    if (!_secondFilled || !_secondValid(l)) {
+      return (sys: s1, dia: d1, pulse: p1);
+    }
     final s2 = _int(_sys2)!;
     final d2 = _int(_dia2)!;
     final p2 = _int(_pulse2);
@@ -182,23 +190,20 @@ class _EntryScreenState extends State<EntryScreen> {
   }
 
   Future<void> _pickDateTime() async {
+    final l = context.l10n;
     final now = AppScope.read(context).now();
     final date = await showDatePicker(
       context: context,
       initialDate: _takenAt,
       firstDate: DateTime(now.year - 10),
       lastDate: now,
-      helpText: 'Giorno della misura',
+      helpText: l.pickDayHelp,
     );
     if (date == null || !mounted) return;
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_takenAt),
-      helpText: 'Ora della misura',
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-        child: child!,
-      ),
+      helpText: l.pickTimeHelp,
     );
     if (!mounted) return;
     final t = time ?? TimeOfDay.fromDateTime(_takenAt);
@@ -208,11 +213,12 @@ class _EntryScreenState extends State<EntryScreen> {
   }
 
   Future<void> _save() async {
+    final l = context.l10n;
     setState(() => _submitted = true);
-    if (!_valid || _saving) return;
+    if (!_valid(l) || _saving) return;
     setState(() => _saving = true);
     final state = AppScope.read(context);
-    final v = _values;
+    final v = _values(l);
     final base = widget.existing;
     final m = Measurement(
       id: base?.id ?? state.newId(),
@@ -232,23 +238,21 @@ class _EntryScreenState extends State<EntryScreen> {
   }
 
   Future<void> _delete() async {
+    final l = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminare la misura?'),
-        content: const Text(
-          'La misura sparisce dal diario, dai grafici e dai '
-          'report. Non si può annullare.',
-        ),
+        title: Text(l.deleteConfirmTitle),
+        content: Text(l.deleteConfirmBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annulla'),
+            child: Text(l.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.high),
-            child: const Text('Elimina'),
+            child: Text(l.delete),
           ),
         ],
       ),
@@ -260,6 +264,7 @@ class _EntryScreenState extends State<EntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final state = AppScope.of(context);
     final previous = state.measurements
         .where(
@@ -269,12 +274,12 @@ class _EntryScreenState extends State<EntryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_editing ? 'Modifica misura' : 'Controlla e salva'),
+        title: Text(_editing ? l.entryEditTitle : l.entryNewTitle),
         titleSpacing: 0,
         actions: [
           if (_editing)
             IconButton(
-              tooltip: 'Elimina misura',
+              tooltip: l.deleteReading,
               onPressed: _delete,
               icon: const Icon(Icons.delete_outline_rounded),
             ),
@@ -295,40 +300,41 @@ class _EntryScreenState extends State<EntryScreen> {
             children: [
               Expanded(
                 child: _BigField(
-                  label: 'Sistolica',
+                  label: l.systolic,
                   unit: 'mmHg',
                   controller: _sys,
-                  error: _submitted ? _sysError(_sys, _dia) : null,
+                  error: _submitted ? _sysError(l, _sys, _dia) : null,
                   autofocus: !_editing,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _BigField(
-                  label: 'Diastolica',
+                  label: l.diastolic,
                   unit: 'mmHg',
                   controller: _dia,
-                  error: _submitted ? _diaError(_dia) : null,
+                  error: _submitted ? _diaError(l, _dia) : null,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           _BigField(
-            label: 'Polso',
+            label: l.pulse,
             unit: 'bpm',
             controller: _pulse,
-            error: _submitted ? _pulseError(_pulse) : null,
+            error: _submitted ? _pulseError(l, _pulse) : null,
             size: 34,
-            hint: 'facoltativo',
+            hint: l.optional,
           ),
-          if (_int(_sys) != null &&
-              _int(_dia) != null &&
-              _sysError(_sys, _dia) == null &&
-              _diaError(_dia) == null) ...[
+          if (_firstValid(l)) ...[
             const SizedBox(height: 12),
             _CategoryHint(
-              category: classify(_values.sys, _values.dia, state.thresholds),
+              category: classify(
+                _values(l).sys,
+                _values(l).dia,
+                state.thresholds,
+              ),
               esc: state.thresholds.isEsc2024,
               previous: previous == null
                   ? null
@@ -341,30 +347,30 @@ class _EntryScreenState extends State<EntryScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Contesto',
+                  l.contextTitle,
                   style: AppText.body(16, weight: FontWeight.w800),
                 ),
                 const SizedBox(height: 14),
                 _ChoiceGroup<Arm>(
-                  label: 'Braccio',
+                  label: l.arm,
                   value: _arm,
-                  options: const {Arm.left: 'Sinistro', Arm.right: 'Destro'},
+                  options: {Arm.left: l.armLeft, Arm.right: l.armRight},
                   onChanged: (v) => setState(() => _arm = v),
                 ),
                 const SizedBox(height: 14),
                 _ChoiceGroup<Posture>(
-                  label: 'Posizione',
+                  label: l.posture,
                   value: _posture,
-                  options: const {
-                    Posture.sitting: 'Seduto',
-                    Posture.standing: 'In piedi',
-                    Posture.lying: 'Sdraiato',
+                  options: {
+                    Posture.sitting: l.postureSitting,
+                    Posture.standing: l.postureStanding,
+                    Posture.lying: l.postureLying,
                   },
                   onChanged: (v) => setState(() => _posture = v),
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Nota',
+                  l.note,
                   style: AppText.body(
                     13,
                     weight: FontWeight.w700,
@@ -378,16 +384,14 @@ class _EntryScreenState extends State<EntryScreen> {
                   maxLines: 4,
                   textCapitalization: TextCapitalization.sentences,
                   style: AppText.body(15, weight: FontWeight.w500),
-                  decoration: const InputDecoration(
-                    hintText: 'Es. caffè mezz’ora prima, dormito poco',
-                  ),
+                  decoration: InputDecoration(hintText: l.noteHint),
                 ),
               ],
             ),
           ),
           if (!_editing) ...[
             const SizedBox(height: 12),
-            _secondReadingSection(),
+            _secondReadingSection(l),
           ],
           const SizedBox(height: 16),
           FilledButton.icon(
@@ -400,23 +404,24 @@ class _EntryScreenState extends State<EntryScreen> {
               textStyle: AppText.body(16, weight: FontWeight.w800),
             ),
             icon: const Icon(Icons.check_rounded),
-            label: Text(_editing ? 'Salva modifiche' : 'Salva misurazione'),
+            label: Text(_editing ? l.saveChanges : l.saveReading),
           ),
         ],
       ),
     );
   }
 
-  Widget _secondReadingSection() {
+  Widget _secondReadingSection(AppLocalizations l) {
     if (_second == _SecondReading.ready) {
-      final avg = _valid && _secondFilled ? _values : null;
+      final avg = _valid(l) && _secondFilled ? _values(l) : null;
+      final showErrors = _submitted && _secondFilled;
       return AppCard(
         borderColor: const Color(0xFF9FC3C6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Seconda lettura',
+              l.secondReading,
               style: AppText.body(
                 14,
                 weight: FontWeight.w800,
@@ -429,43 +434,39 @@ class _EntryScreenState extends State<EntryScreen> {
               children: [
                 Expanded(
                   child: _BigField(
-                    label: 'Sistolica',
+                    label: l.systolic,
                     unit: 'mmHg',
                     controller: _sys2,
                     size: 30,
-                    error: _submitted && _secondFilled
-                        ? _sysError(_sys2, _dia2)
-                        : null,
+                    error: showErrors ? _sysError(l, _sys2, _dia2) : null,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _BigField(
-                    label: 'Diastolica',
+                    label: l.diastolic,
                     unit: 'mmHg',
                     controller: _dia2,
                     size: 30,
-                    error: _submitted && _secondFilled
-                        ? _diaError(_dia2)
-                        : null,
+                    error: showErrors ? _diaError(l, _dia2) : null,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             _BigField(
-              label: 'Polso',
+              label: l.pulse,
               unit: 'bpm',
               controller: _pulse2,
               size: 26,
-              hint: 'facoltativo',
-              error: _submitted && _secondFilled ? _pulseError(_pulse2) : null,
+              hint: l.optional,
+              error: showErrors ? _pulseError(l, _pulse2) : null,
             ),
             const SizedBox(height: 8),
             Text(
               avg == null
-                  ? 'Il diario salverà la media delle due letture.'
-                  : 'Verrà salvata la media: ${avg.sys}/${avg.dia}',
+                  ? l.secondAverageInfo
+                  : l.secondAverageValue('${avg.sys}/${avg.dia}'),
               style: AppText.body(13, color: AppColors.ink2),
             ),
           ],
@@ -487,9 +488,7 @@ class _EntryScreenState extends State<EntryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    waiting
-                        ? 'Rilassati, ancora un attimo'
-                        : 'Seconda lettura? Facoltativa',
+                    waiting ? l.secondWaitTitle : l.secondOptionalTitle,
                     style: AppText.body(
                       14,
                       weight: FontWeight.w800,
@@ -498,9 +497,7 @@ class _EntryScreenState extends State<EntryScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    waiting
-                        ? 'Allo scadere misura di nuovo, stesso braccio.'
-                        : 'Se la fai dopo un minuto, l’app salva la media.',
+                    waiting ? l.secondWaitBody : l.secondOptionalBody,
                     style: AppText.body(12, height: 1.4, color: AppColors.ink2),
                   ),
                 ],
@@ -519,7 +516,11 @@ class _EntryScreenState extends State<EntryScreen> {
                 textStyle: AppText.body(14, weight: FontWeight.w800),
               ),
               child: Text(
-                waiting ? '0:${two(_secondsLeft)} · Salta' : 'Timer 1:00',
+                waiting
+                    ? l.timerSkip(
+                        '0:${_secondsLeft.toString().padLeft(2, '0')}',
+                      )
+                    : l.timerStart,
               ),
             ),
           ],
@@ -544,6 +545,7 @@ class _WhenCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return AppCard(
       radius: 20,
       padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
@@ -561,20 +563,20 @@ class _WhenCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  onScan == null ? 'Misura' : 'Inserita a mano',
+                  onScan == null ? l.whenReading : l.whenManual,
                   style: AppText.body(14, weight: FontWeight.w800),
                 ),
                 Text(
-                  formatRelativeDateTime(takenAt, now),
+                  context.dates.relative(takenAt, now, l),
                   style: AppText.body(13, color: AppColors.muted),
                 ),
               ],
             ),
           ),
-          TextButton(onPressed: onChange, child: const Text('Cambia')),
+          TextButton(onPressed: onChange, child: Text(l.change)),
           if (onScan != null)
             IconButton(
-              tooltip: 'Leggi dal display (in arrivo)',
+              tooltip: l.scanTooltip,
               onPressed: onScan,
               color: AppColors.primary,
               icon: const Icon(Icons.photo_camera_outlined),
@@ -634,7 +636,34 @@ class _BigField extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Expanded(
-                child: Semantics(label: '$label in $unit', child: _input()),
+                child: Semantics(
+                  label: context.l10n.fieldSemantics(label, unit),
+                  child: TextField(
+                    controller: controller,
+                    autofocus: autofocus,
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.next,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(3),
+                    ],
+                    style: AppText.display(size, tabular: true),
+                    decoration: InputDecoration(
+                      hintText: hint ?? '–',
+                      hintStyle: AppText.body(
+                        size * 0.45,
+                        weight: FontWeight.w500,
+                        color: AppColors.faint,
+                      ),
+                      filled: false,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(width: 6),
               Text(
@@ -660,32 +689,6 @@ class _BigField extends StatelessWidget {
       ),
     );
   }
-
-  Widget _input() => TextField(
-    controller: controller,
-    autofocus: autofocus,
-    keyboardType: TextInputType.number,
-    textInputAction: TextInputAction.next,
-    inputFormatters: [
-      FilteringTextInputFormatter.digitsOnly,
-      LengthLimitingTextInputFormatter(3),
-    ],
-    style: AppText.display(size, tabular: true),
-    decoration: InputDecoration(
-      hintText: hint ?? '–',
-      hintStyle: AppText.body(
-        size * 0.45,
-        weight: FontWeight.w500,
-        color: AppColors.faint,
-      ),
-      filled: false,
-      isDense: true,
-      contentPadding: EdgeInsets.zero,
-      border: InputBorder.none,
-      enabledBorder: InputBorder.none,
-      focusedBorder: InputBorder.none,
-    ),
-  );
 }
 
 class _CategoryHint extends StatelessWidget {
@@ -701,7 +704,11 @@ class _CategoryHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final source = esc ? 'secondo ESC 2024' : 'secondo le tue soglie';
+    final l = context.l10n;
+    final hint = l.categoryHint(
+      category.label(l).toLowerCase(),
+      esc ? l.hintSourceEsc : l.hintSourceCustom,
+    );
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -718,8 +725,7 @@ class _CategoryHint extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Fascia «${category.label.toLowerCase()}» $source'
-              '${previous == null ? '' : ' · la volta prima $previous'}',
+              previous == null ? hint : '$hint · ${l.previousValue(previous!)}',
               style: AppText.body(
                 13,
                 weight: FontWeight.w700,

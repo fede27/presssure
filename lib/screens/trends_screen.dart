@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n.dart';
 import '../logic/bp_category.dart';
-import '../logic/formatting.dart';
 import '../logic/schedule.dart';
 import '../logic/stats.dart';
 import '../models/measurement.dart';
@@ -27,11 +27,11 @@ class TrendsScreen extends StatefulWidget {
 class _TrendsScreenState extends State<TrendsScreen> {
   var _range = TrendRange.sixMonths;
 
-  static const _labels = {
-    TrendRange.threeMonths: '3 mesi',
-    TrendRange.sixMonths: '6 mesi',
-    TrendRange.year: '1 anno',
-    TrendRange.all: 'Tutto',
+  String _label(AppLocalizations l, TrendRange r) => switch (r) {
+    TrendRange.threeMonths => l.range3m,
+    TrendRange.sixMonths => l.range6m,
+    TrendRange.year => l.range1y,
+    TrendRange.all => l.rangeAll,
   };
 
   DateTime? _from(DateTime now) => switch (_range) {
@@ -43,6 +43,7 @@ class _TrendsScreenState extends State<TrendsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final state = AppScope.of(context);
     final now = state.now();
     final from = _from(now);
@@ -64,13 +65,13 @@ class _TrendsScreenState extends State<TrendsScreen> {
                   child: Semantics(
                     header: true,
                     child: Text(
-                      'Andamento',
+                      l.navTrends,
                       style: AppText.display(32, weight: FontWeight.w700),
                     ),
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Esporta e condividi',
+                  tooltip: l.exportAndShare,
                   onPressed: () => HomeShell.select(context, HomeShell.share),
                   icon: const Icon(Icons.ios_share_rounded),
                 ),
@@ -84,7 +85,7 @@ class _TrendsScreenState extends State<TrendsScreen> {
                 if (r != TrendRange.threeMonths) const SizedBox(width: 6),
                 Expanded(
                   child: ChoicePill(
-                    label: _labels[r]!,
+                    label: _label(l, r),
                     selected: _range == r,
                     minHeight: 40,
                     onTap: () => setState(() => _range = r),
@@ -98,19 +99,18 @@ class _TrendsScreenState extends State<TrendsScreen> {
             AppCard(
               padding: const EdgeInsets.all(20),
               child: Text(
-                'Nessuna misura in questo periodo. Il grafico si riempie con '
-                'le prossime.',
+                l.trendsEmpty,
                 style: AppText.body(14, color: AppColors.muted),
               ),
             )
           else ...[
-            _AverageCard(items: items, rangeLabel: _labels[_range]!),
+            _AverageCard(items: items, rangeLabel: _label(l, _range)),
             const SizedBox(height: 12),
             _ChartCard(items: items, from: from, now: now),
             const SizedBox(height: 12),
             _QuarterCard(now: now),
             const SizedBox(height: 12),
-            _RegularityCard(tracker: state.tracker, now: now),
+            _RegularityCard(tracker: state.tracker),
             const SizedBox(height: 12),
             _BandsCard(items: items, thresholds: t, now: now),
           ],
@@ -128,9 +128,10 @@ class _AverageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final list = items;
-    final last4 = averageOfLast(list)!;
-    final all = average(list)!;
+    final l = context.l10n;
+    final last4 = averageOfLast(items)!;
+    final all = average(items)!;
+    final small = AppText.body(13, color: AppColors.muted);
     return AppCard(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       child: Row(
@@ -141,7 +142,7 @@ class _AverageCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ultime ${last4.count} misure',
+                  l.lastNReadings(last4.count),
                   style: AppText.body(
                     14,
                     weight: FontWeight.w700,
@@ -161,14 +162,10 @@ class _AverageCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${list.length} ${list.length == 1 ? 'misura' : 'misure'} in $rangeLabel',
-                style: AppText.body(13, color: AppColors.muted),
+                l.readingsInRange(l.readingsCount(items.length), rangeLabel),
+                style: small,
               ),
-              if (all.pulse != null)
-                Text(
-                  'Polso medio ${all.pulse}',
-                  style: AppText.body(13, color: AppColors.muted),
-                ),
+              if (all.pulse != null) Text(l.avgPulse(all.pulse!), style: small),
             ],
           ),
         ],
@@ -190,9 +187,9 @@ class _ChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final state = AppScope.of(context);
-    final list = items;
-    final start = from ?? list.first.takenAt;
+    final start = from ?? items.first.takenAt;
     final gaps = state.tracker.periods
         .where(
           (p) =>
@@ -202,7 +199,7 @@ class _ChartCard extends StatelessWidget {
         )
         .map((p) => p.period)
         .toList();
-    final last = list.last;
+    final last = items.last;
     return AppCard(
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
       child: Column(
@@ -214,27 +211,27 @@ class _ChartCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Le tue misure',
+                    l.yourReadings,
                     style: AppText.body(15, weight: FontWeight.w800),
                   ),
                 ),
-                _swatch(AppColors.systolic, 'Sist.'),
+                _swatch(AppColors.systolic, l.sysShort),
                 const SizedBox(width: 12),
-                _swatch(AppColors.diastolic, 'Diast.'),
+                _swatch(AppColors.diastolic, l.diaShort),
               ],
             ),
           ),
           const SizedBox(height: 8),
           BpChart(
-            items: list,
+            items: items,
             thresholds: state.thresholds,
             from: start,
             to: now,
             gaps: gaps,
             periodDays: state.schedule.periodDays,
             highlightLabel: dateOnly(last.takenAt) == dateOnly(now)
-                ? 'Oggi'
-                : formatDayMonthShort(last.takenAt),
+                ? l.todayCapital
+                : context.dates.dayMonthShort(last.takenAt),
           ),
           const SizedBox(height: 8),
           Padding(
@@ -252,15 +249,15 @@ class _ChartCard extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  'Singola misura',
+                  l.legendSingle,
                 ),
                 _legend(
                   Container(width: 14, height: 3, color: AppColors.faint),
-                  'Media delle ultime 4',
+                  l.legendAvg4,
                 ),
                 _legend(
                   Container(width: 14, height: 10, color: AppColors.background),
-                  'Saltate',
+                  l.legendSkipped,
                 ),
               ],
             ),
@@ -302,6 +299,8 @@ class _QuarterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final dates = context.dates;
     final state = AppScope.of(context);
     final q = QuarterComparison.at(state.measurements, now);
     return AppCard(
@@ -309,7 +308,7 @@ class _QuarterCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Trimestre a confronto',
+            l.quarterCompare,
             style: AppText.body(15, weight: FontWeight.w800),
           ),
           const SizedBox(height: 10),
@@ -317,9 +316,10 @@ class _QuarterCard extends StatelessWidget {
             QuarterRow(quarters: q)
           else
             Text(
-              'Servono misure in due trimestri: '
-              '${formatMonthRange(q.previousFrom, q.previousTo)} e '
-              '${formatMonthRange(q.currentFrom, q.currentTo)}.',
+              l.quarterNeedTwo(
+                dates.monthRange(q.previousFrom, q.previousTo),
+                dates.monthRange(q.currentFrom, q.currentTo),
+              ),
               style: AppText.body(13, color: AppColors.muted),
             ),
         ],
@@ -329,13 +329,13 @@ class _QuarterCard extends StatelessWidget {
 }
 
 class _RegularityCard extends StatelessWidget {
-  const _RegularityCard({required this.tracker, required this.now});
+  const _RegularityCard({required this.tracker});
 
   final HabitTracker tracker;
-  final DateTime now;
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final periods = tracker.last(26);
     final schedule = tracker.schedule;
     final done = periods.where((p) => p.status == PeriodStatus.done).length;
@@ -343,6 +343,7 @@ class _RegularityCard extends StatelessWidget {
         .where((p) => p.status != PeriodStatus.pending)
         .length;
     final streak = tracker.currentStreak;
+    final small = AppText.body(12, color: AppColors.muted);
 
     return AppCard(
       child: Column(
@@ -352,12 +353,12 @@ class _RegularityCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Regolarità',
+                  l.regularity,
                   style: AppText.body(15, weight: FontWeight.w800),
                 ),
               ),
               Text(
-                '$done ${done == 1 ? schedule.occasionSingular : schedule.occasionPlural} su $elapsed',
+                l.regularityCount(done, schedule.occasions(l, done), elapsed),
                 style: AppText.body(
                   13,
                   weight: FontWeight.w700,
@@ -368,7 +369,7 @@ class _RegularityCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Semantics(
-            label: '$done misurate su $elapsed',
+            label: l.regularityLabel(done, elapsed),
             excludeSemantics: true,
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -390,14 +391,12 @@ class _RegularityCard extends StatelessWidget {
               Text(
                 periods.isEmpty
                     ? ''
-                    : formatDayMonth(periods.first.period.start),
-                style: AppText.body(12, color: AppColors.muted),
+                    : context.dates.dayMonth(periods.first.period.start),
+                style: small,
               ),
               Expanded(
                 child: Text(
-                  streak > 0
-                      ? '$streak ${streak == 1 ? schedule.occasionSingular : schedule.occasionPlural} di fila'
-                      : '',
+                  streak > 0 ? schedule.inARow(l, streak) : '',
                   textAlign: TextAlign.center,
                   style: AppText.body(
                     12,
@@ -406,7 +405,7 @@ class _RegularityCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Text('oggi', style: AppText.body(12, color: AppColors.muted)),
+              Text(l.todayLower, style: small),
             ],
           ),
         ],
@@ -465,12 +464,12 @@ class _BandsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final state = AppScope.of(context);
-    final list = items;
-    final counts = countByCategory(list, thresholds);
-    final total = list.length;
+    final counts = countByCategory(items, thresholds);
+    final total = items.length;
     final quarterStart = DateTime(now.year, now.month - 2);
-    final recent = list.where((m) => !m.takenAt.isBefore(quarterStart));
+    final recent = items.where((m) => !m.takenAt.isBefore(quarterStart));
     final recentBelow = recent
         .where((m) => state.categoryOf(m) != BpCategory.high)
         .length;
@@ -479,18 +478,16 @@ class _BandsCard extends StatelessWidget {
       BpCategory.elevated,
       BpCategory.nonElevated,
     ];
+    final note = AppText.body(12, height: 1.45, color: AppColors.muted);
 
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Misure per fascia',
-            style: AppText.body(15, weight: FontWeight.w800),
-          ),
+          Text(l.bandsTitle, style: AppText.body(15, weight: FontWeight.w800)),
           const SizedBox(height: 12),
           Semantics(
-            label: order.map((c) => '${c.label}: ${counts[c]}').join(', '),
+            label: order.map((c) => '${c.label(l)}: ${counts[c]}').join(', '),
             excludeSemantics: true,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(7),
@@ -529,7 +526,7 @@ class _BandsCard extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      c.rangeLabel(thresholds),
+                      c.rangeLabel(l, thresholds),
                       style: AppText.body(14),
                     ),
                   ),
@@ -546,22 +543,22 @@ class _BandsCard extends StatelessWidget {
             ),
           if (recent.isNotEmpty && recent.length != total)
             Text(
-              'Da ${monthName(quarterStart.month)} $recentBelow misure su '
-              '${recent.length} sono sotto '
-              '${thresholds.highSystolic}/${thresholds.highDiastolic}.',
-              style: AppText.body(12, height: 1.45, color: AppColors.muted),
+              l.bandsRecent(
+                context.dates.monthName(quarterStart.month),
+                recentBelow,
+                recent.length,
+                thresholds.highSystolic,
+                thresholds.highDiastolic,
+              ),
+              style: note,
             ),
           const Divider(height: 20),
           Row(
             children: [
               Expanded(
                 child: Text(
-                  thresholds.isEsc2024
-                      ? 'Fasce predefinite: linee guida europee ESC 2024, '
-                            'misurazione a domicilio.'
-                      : 'Soglie personalizzate. Le linee guida ESC 2024 per '
-                            'la misura a domicilio usano 135/85.',
-                  style: AppText.body(12, height: 1.45, color: AppColors.muted),
+                  thresholds.isEsc2024 ? l.bandsDefaultEsc : l.bandsCustom,
+                  style: note,
                 ),
               ),
               const SizedBox(width: 12),
@@ -579,7 +576,7 @@ class _BandsCard extends StatelessWidget {
                   ),
                   textStyle: AppText.body(13, weight: FontWeight.w800),
                 ),
-                child: const Text('Cambia soglie'),
+                child: Text(l.changeThresholds),
               ),
             ],
           ),
@@ -644,6 +641,7 @@ class _ThresholdsDialogState extends State<_ThresholdsDialog> {
   }
 
   void _save() {
+    final l = context.l10n;
     final values = [
       _highSys,
       _highDia,
@@ -651,7 +649,7 @@ class _ThresholdsDialogState extends State<_ThresholdsDialog> {
       _elevDia,
     ].map((c) => int.tryParse(c.text)).toList();
     if (values.any((v) => v == null || v < 40 || v > 250)) {
-      setState(() => _error = 'Inserisci valori tra 40 e 250.');
+      setState(() => _error = l.thresholdsErrRange);
       return;
     }
     final t = Thresholds(
@@ -662,7 +660,7 @@ class _ThresholdsDialogState extends State<_ThresholdsDialog> {
     );
     if (t.elevatedSystolic >= t.highSystolic ||
         t.elevatedDiastolic >= t.highDiastolic) {
-      setState(() => _error = 'La fascia elevata deve stare sotto la soglia.');
+      setState(() => _error = l.thresholdsErrOrder);
       return;
     }
     Navigator.pop(context, t);
@@ -682,41 +680,42 @@ class _ThresholdsDialogState extends State<_ThresholdsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return AlertDialog(
-      title: const Text('Soglie'),
+      title: Text(l.thresholdsTitle),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Soglia (da qui «alta»)',
+              l.thresholdHigh,
               style: AppText.body(13, weight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                _field('Sistolica', _highSys),
+                _field(l.systolic, _highSys),
                 const SizedBox(width: 10),
-                _field('Diastolica', _highDia),
+                _field(l.diastolic, _highDia),
               ],
             ),
             const SizedBox(height: 14),
             Text(
-              'Inizio fascia elevata',
+              l.thresholdElevated,
               style: AppText.body(13, weight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                _field('Sistolica', _elevSys),
+                _field(l.systolic, _elevSys),
                 const SizedBox(width: 10),
-                _field('Diastolica', _elevDia),
+                _field(l.diastolic, _elevDia),
               ],
             ),
             const SizedBox(height: 10),
             Text(
-              'Cambiale solo se te lo indica il medico.',
+              l.thresholdsDoctorNote,
               style: AppText.body(12, color: AppColors.muted),
             ),
             if (_error != null) ...[
@@ -734,12 +733,12 @@ class _ThresholdsDialogState extends State<_ThresholdsDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: _reset, child: const Text('ESC 2024')),
+        TextButton(onPressed: _reset, child: Text(l.esc2024)),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Annulla'),
+          child: Text(l.cancel),
         ),
-        TextButton(onPressed: _save, child: const Text('Salva')),
+        TextButton(onPressed: _save, child: Text(l.save)),
       ],
     );
   }

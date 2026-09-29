@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../logic/bp_category.dart';
 import '../models/measurement.dart';
 import '../state/app_state.dart';
@@ -35,12 +36,9 @@ void showScanPlaceholder(BuildContext context) {
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
-        content: const Text(
-          'La lettura dal display arriverà presto. Per ora inserisci i valori '
-          'a mano.',
-        ),
+        content: Text(context.l10n.scanPlaceholder),
         action: SnackBarAction(
-          label: 'A mano',
+          label: context.l10n.byHand,
           onPressed: () => openNewMeasurement(context),
         ),
       ),
@@ -53,4 +51,4 @@ void backToHome(BuildContext context) =>
 
 /// Placeholder for features that need a server or are not built yet.
 void showComingSoon(BuildContext context, String what) =>
-    showSnack(context, '$what: in arrivo.');
+    showSnack(context, context.l10n.comingSoon(what));

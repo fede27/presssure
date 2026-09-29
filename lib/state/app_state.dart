@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../l10n/l10n.dart';
 import '../logic/achievements.dart';
 import '../logic/bp_category.dart';
 import '../logic/reminder_plan.dart';
@@ -32,7 +33,10 @@ class AppState extends ChangeNotifier {
     required this._repository,
     required this._reminders,
     DateTime Function()? clock,
-  }) : _clock = clock ?? DateTime.now {
+    Locale locale = const Locale('en'),
+  }) : _clock = clock ?? DateTime.now,
+       _locale = locale,
+       _dateLocale = locale.languageCode {
     _measurements = sortedByDate(_repository.loadMeasurements());
     _settings = _repository.loadSettings();
   }
@@ -40,6 +44,10 @@ class AppState extends ChangeNotifier {
   final Repository _repository;
   final ReminderService _reminders;
   final DateTime Function() _clock;
+  Locale _locale;
+  String _dateLocale;
+  bool _remindersStarted = false;
+  Future<void> _pendingReschedule = Future.value();
 
   late List<Measurement> _measurements;
   late AppSettings _settings;
@@ -80,16 +88,45 @@ class AppState extends ChangeNotifier {
     _achievements = null;
   }
 
+  /// Language of the texts and locale of the dates in notifications. Set by
+  /// the app from the resolved locale (see [updateLocale]).
+  Locale get locale => _locale;
+  String get dateLocale => _dateLocale;
+  AppLocalizations get l10n => lookupAppLocalizations(_locale);
+
+  /// Called when the app resolves (or the phone changes) its locale:
+  /// scheduled notifications are rewritten in the new language.
+  void updateLocale(Locale locale, String dateLocale) {
+    if (locale == _locale && dateLocale == _dateLocale) return;
+    _locale = locale;
+    _dateLocale = dateLocale;
+    if (_remindersStarted) _reschedule();
+  }
+
   Future<void> startReminders() async {
     await _reminders.init();
+    _remindersStarted = true;
     await _reschedule();
   }
 
   Future<bool> requestReminderPermission() => _reminders.requestPermission();
 
-  Future<void> _reschedule() => _reminders.reschedule(
-    planReminders(settings: _settings, measurements: _measurements, now: now()),
-  );
+  /// Reschedules one at a time, so overlapping calls never mix plans.
+  Future<void> _reschedule() =>
+      _pendingReschedule = _pendingReschedule.catchError((_) {}).then((_) {
+        final l = l10n;
+        return _reminders.reschedule(
+          planReminders(
+            settings: _settings,
+            measurements: _measurements,
+            now: now(),
+            l10n: l,
+            dates: Dates(_dateLocale),
+          ),
+          channelName: l.reminderChannel,
+          channelDescription: l.reminderChannelDescription,
+        );
+      });
 
   String newId() => now().microsecondsSinceEpoch.toRadixString(36);
 

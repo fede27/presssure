@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../logic/achievements.dart';
-import '../logic/formatting.dart';
 import '../logic/stats.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
@@ -18,14 +18,16 @@ class CelebrateScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final dates = context.dates;
     final state = AppScope.of(context);
     final tracker = state.tracker;
     final schedule = state.schedule;
     final m = outcome.measurement;
+    final value = '${m.systolic}/${m.diastolic}';
     final badge = outcome.newBadges.firstOrNull;
     final streak = tracker.currentStreak;
-    final streakLabel =
-        '$streak ${streak == 1 ? schedule.occasionSingular : schedule.occasionPlural} di fila';
+    final streakLabel = schedule.inARow(l, streak);
     final all = state.measurements;
     final lowest =
         all.length >= 3 &&
@@ -51,7 +53,7 @@ class CelebrateScreen extends StatelessWidget {
                   _Medal(badge: badge),
                   const SizedBox(height: 14),
                   Text(
-                    badge != null ? 'NUOVO BADGE' : 'MISURA SALVATA',
+                    badge != null ? l.newBadge : l.readingSaved,
                     style: AppText.body(
                       13,
                       weight: FontWeight.w800,
@@ -63,7 +65,11 @@ class CelebrateScreen extends StatelessWidget {
                   Semantics(
                     header: true,
                     child: Text(
-                      badge != null ? '${badge.title}!' : 'Fatto, $streakLabel',
+                      badge != null
+                          ? l.celebrateTitleBadge(
+                              achievementTitle(badge, l, schedule),
+                            )
+                          : l.celebrateTitleStreak(streakLabel),
                       textAlign: TextAlign.center,
                       style: AppText.display(
                         34,
@@ -76,8 +82,8 @@ class CelebrateScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     badge != null
-                        ? _badgeLine(state, outcome.newBadges.length)
-                        : '${m.systolic}/${m.diastolic} è nel diario.',
+                        ? _badgeLine(state, l, dates, outcome.newBadges.length)
+                        : l.celebrateInDiary(value),
                     textAlign: TextAlign.center,
                     style: AppText.body(
                       15,
@@ -108,8 +114,8 @@ class CelebrateScreen extends StatelessWidget {
                           foreground: AppColors.systolicDark,
                           title: streakLabel,
                           subtitle: tracker.jollyAvailable
-                              ? 'Jolly del mese ancora disponibile.'
-                              : 'Jolly del mese già usato: non saltare la prossima.',
+                              ? l.jollyAvailableLine
+                              : l.jollyUsedLine,
                         ),
                         const SizedBox(height: 10),
                         _StreakBar(current: streak, record: record),
@@ -123,12 +129,14 @@ class CelebrateScreen extends StatelessWidget {
                       background: AppColors.greenSoft,
                       foreground: AppColors.green,
                       title: lowest
-                          ? '${m.systolic}/${m.diastolic}, la più bassa da '
-                                '${monthName(all.first.takenAt.month)}'
-                          : '${m.systolic}/${m.diastolic} salvata',
+                          ? l.lowestSince(
+                              value,
+                              dates.monthName(all.first.takenAt.month),
+                            )
+                          : l.readingStored(value),
                       subtitle: last4 == null
                           ? ''
-                          : 'Media delle ultime ${last4.count} misure: $last4.',
+                          : l.avgOfLast(last4.count, '$last4'),
                     ),
                   ),
                   if (closest != null) ...[
@@ -143,14 +151,22 @@ class CelebrateScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Quasi «${closest.title}»',
+                                  l.almostBadge(
+                                    achievementTitle(closest, l, schedule),
+                                  ),
                                   style: AppText.body(
                                     16,
                                     weight: FontWeight.w800,
                                   ),
                                 ),
                                 Text(
-                                  closest.detail,
+                                  achievementDetail(
+                                    closest,
+                                    l,
+                                    dates,
+                                    state.now(),
+                                    state.thresholds,
+                                  ),
                                   style: AppText.body(
                                     13,
                                     color: AppColors.muted,
@@ -178,14 +194,14 @@ class CelebrateScreen extends StatelessWidget {
                                   builder: (_) => const AchievementsScreen(),
                                 ),
                               ),
-                          child: const Text('Traguardi'),
+                          child: Text(l.achievements),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: FilledButton(
                           onPressed: () => backToHome(context),
-                          child: const Text('Fatto'),
+                          child: Text(l.done),
                         ),
                       ),
                     ],
@@ -199,14 +215,24 @@ class CelebrateScreen extends StatelessWidget {
     );
   }
 
-  String _badgeLine(AppState state, int count) {
+  /// "Dal 5 aprile 24 misure su 26 domeniche."
+  String _badgeLine(
+    AppState state,
+    AppLocalizations l,
+    Dates dates,
+    int count,
+  ) {
     final first = state.measurements.first.takenAt;
     final done = state.tracker.doneCount;
     final total = state.tracker.periods.length;
-    final more = count > 1 ? ' E altri ${count - 1} badge.' : '';
-    return 'Dal ${formatDayMonth(first)} $done '
-        '${done == 1 ? 'misura' : 'misure'} su $total '
-        '${total == 1 ? state.schedule.occasionSingular : state.schedule.occasionPlural}.$more';
+    final more = count > 1 ? l.andMoreBadges(count - 1) : '';
+    return l.celebrateSince(
+          dates.dayMonth(first),
+          l.readingsCount(done),
+          total,
+          state.schedule.occasions(l, total),
+        ) +
+        more;
   }
 }
 
@@ -288,12 +314,18 @@ class _StreakBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final isRecord = current >= record;
     final target = isRecord ? current : record + 1;
+    final labelStyle = AppText.body(
+      12,
+      weight: FontWeight.w700,
+      color: AppColors.muted,
+    );
     return Semantics(
       label: isRecord
-          ? 'Serie record: $current'
-          : '$current su ${record + 1} per battere il record di $record',
+          ? l.streakRecordSemantics(current)
+          : l.streakToBeat(current, record + 1, record),
       excludeSemantics: true,
       child: Column(
         children: [
@@ -310,21 +342,10 @@ class _StreakBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Text(l.streakNow(current), style: labelStyle),
               Text(
-                '$current ora',
-                style: AppText.body(
-                  12,
-                  weight: FontWeight.w700,
-                  color: AppColors.muted,
-                ),
-              ),
-              Text(
-                isRecord ? 'nuovo record!' : 'record $record',
-                style: AppText.body(
-                  12,
-                  weight: FontWeight.w700,
-                  color: AppColors.muted,
-                ),
+                isRecord ? l.newRecord : l.recordValue(record),
+                style: labelStyle,
               ),
             ],
           ),

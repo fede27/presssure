@@ -1,11 +1,27 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:presssure/l10n/l10n.dart';
 import 'package:presssure/logic/reminder_plan.dart';
+import 'package:presssure/models/measurement.dart';
 import 'package:presssure/models/settings.dart';
 
 import '../helpers.dart';
 
 void main() {
   const weekly = AppSettings(onboarded: true, monthlySummary: false);
+
+  List<PlannedReminder> makePlan({
+    required AppSettings settings,
+    required List<Measurement> measurements,
+    required DateTime now,
+    AppLocalizations? l10n,
+    Dates? dates,
+  }) => planReminders(
+    settings: settings,
+    measurements: measurements,
+    now: now,
+    l10n: l10n ?? itL10n,
+    dates: dates ?? itDates,
+  );
 
   List<PlannedReminder> reminders(List<PlannedReminder> plan) =>
       plan.where((r) => r.id >= reminderIdBase && r.id < nudgeIdBase).toList();
@@ -14,7 +30,7 @@ void main() {
       plan.where((r) => r.id >= nudgeIdBase && r.id < summaryIdBase).toList();
 
   test('on Saturday the next reminder is Sunday at 8', () {
-    final plan = planReminders(
+    final plan = makePlan(
       settings: weekly,
       measurements: const [],
       now: DateTime(2026, 9, 26, 10),
@@ -28,7 +44,7 @@ void main() {
   });
 
   test('on Sunday before 8 today still gets its reminder', () {
-    final plan = planReminders(
+    final plan = makePlan(
       settings: weekly,
       measurements: designReadings(),
       now: DateTime(2026, 9, 27, 7),
@@ -38,7 +54,7 @@ void main() {
   });
 
   test('after measuring, today is skipped, nudge included', () {
-    final plan = planReminders(
+    final plan = makePlan(
       settings: weekly,
       measurements: designReadings(includeToday: true),
       now: DateTime(2026, 9, 27, 9),
@@ -51,7 +67,7 @@ void main() {
   });
 
   test('missed this morning: nudge tomorrow', () {
-    final plan = planReminders(
+    final plan = makePlan(
       settings: weekly,
       measurements: designReadings(),
       now: DateTime(2026, 9, 27, 20),
@@ -61,7 +77,7 @@ void main() {
   });
 
   test('nudges can be turned off', () {
-    final plan = planReminders(
+    final plan = makePlan(
       settings: weekly.copyWith(remindNextDay: false),
       measurements: const [],
       now: DateTime(2026, 9, 26, 10),
@@ -70,7 +86,7 @@ void main() {
   });
 
   test('monthly summary on the last day of the month', () {
-    final plan = planReminders(
+    final plan = makePlan(
       settings: weekly.copyWith(monthlySummary: true),
       measurements: designReadings(includeToday: true),
       now: DateTime(2026, 9, 27, 9),
@@ -81,7 +97,7 @@ void main() {
   });
 
   test('daily reminders use the chosen time', () {
-    final plan = planReminders(
+    final plan = makePlan(
       settings: weekly.copyWith(
         frequency: Frequency.daily,
         reminderHour: 21,
@@ -93,5 +109,22 @@ void main() {
     expect(reminders(plan).first.at, DateTime(2026, 9, 26, 21, 30));
     expect(reminders(plan)[1].at, DateTime(2026, 9, 27, 21, 30));
     expect(nudges(plan), isEmpty);
+  });
+
+  test('reminders are written in the phone language', () {
+    final plan = makePlan(
+      settings: weekly.copyWith(monthlySummary: true),
+      measurements: designReadings(includeToday: true),
+      now: DateTime(2026, 9, 27, 9),
+      l10n: enL10n,
+      dates: enDates,
+    );
+    final first = reminders(plan).first;
+    expect(first.title, "It's Sunday: 2 minutes for your blood pressure");
+    expect(first.body, contains('Last time 124/77'));
+    expect(nudges(plan).first.title, 'Yesterday was Sunday');
+    final summary = plan.firstWhere((r) => r.id == summaryIdBase);
+    expect(summary.title, 'Your September');
+    expect(summary.body, 'September: 4 readings, average 125/80.');
   });
 }

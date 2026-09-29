@@ -14,8 +14,13 @@ abstract class ReminderService {
   /// notifications are allowed.
   Future<bool> requestPermission();
 
-  /// Replaces every scheduled notification with [plan].
-  Future<void> reschedule(List<PlannedReminder> plan);
+  /// Replaces every scheduled notification with [plan]. The channel name
+  /// and description are shown in the Android notification settings.
+  Future<void> reschedule(
+    List<PlannedReminder> plan, {
+    required String channelName,
+    required String channelDescription,
+  });
 }
 
 /// Used in tests and on platforms without notifications.
@@ -29,22 +34,16 @@ class NoopReminderService implements ReminderService {
   Future<bool> requestPermission() async => true;
 
   @override
-  Future<void> reschedule(List<PlannedReminder> plan) async => lastPlan = plan;
+  Future<void> reschedule(
+    List<PlannedReminder> plan, {
+    required String channelName,
+    required String channelDescription,
+  }) async => lastPlan = plan;
 }
 
 class LocalNotificationReminderService implements ReminderService {
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _ready = false;
-
-  static const _details = NotificationDetails(
-    android: AndroidNotificationDetails(
-      'reminders',
-      'Promemoria',
-      channelDescription: 'Promemoria per misurare la pressione',
-      importance: Importance.high,
-      priority: Priority.high,
-    ),
-  );
 
   @override
   Future<void> init() async {
@@ -59,7 +58,7 @@ class LocalNotificationReminderService implements ReminderService {
       );
       _ready = true;
     } catch (e) {
-      debugPrint('Promemoria non disponibili: $e');
+      debugPrint('Reminders unavailable: $e');
     }
   }
 
@@ -74,14 +73,27 @@ class LocalNotificationReminderService implements ReminderService {
   }
 
   @override
-  Future<void> reschedule(List<PlannedReminder> plan) async {
+  Future<void> reschedule(
+    List<PlannedReminder> plan, {
+    required String channelName,
+    required String channelDescription,
+  }) async {
     if (!_ready) return;
+    final details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'reminders',
+        channelName,
+        channelDescription: channelDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+    );
     await _plugin.cancelAll();
     for (final r in plan) {
       await _plugin.zonedSchedule(
         id: r.id,
         scheduledDate: tz.TZDateTime.from(r.at, tz.local),
-        notificationDetails: _details,
+        notificationDetails: details,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         title: r.title,
         body: r.body,

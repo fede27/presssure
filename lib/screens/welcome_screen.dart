@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import 'habit_screen.dart';
@@ -10,6 +11,7 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
@@ -33,7 +35,7 @@ class WelcomeScreen extends StatelessWidget {
                     Semantics(
                       header: true,
                       child: Text(
-                        'Il tuo diario della pressione, senza pensieri',
+                        l.welcomeTitle,
                         style: AppText.display(
                           34,
                           weight: FontWeight.w700,
@@ -43,25 +45,25 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 22),
-                    const _Feature(
+                    _Feature(
                       icon: Icons.photo_camera_outlined,
                       background: AppColors.primarySoft,
                       foreground: AppColors.primary,
-                      text: 'Fotografi il display, i valori li scrive l’app',
+                      text: l.welcomeFeaturePhoto,
                     ),
                     const SizedBox(height: 14),
-                    const _Feature(
+                    _Feature(
                       icon: Icons.notifications_none_rounded,
                       background: AppColors.orangeSoft,
                       foreground: AppColors.systolicDark,
-                      text: 'Un promemoria nel giorno che scegli tu',
+                      text: l.welcomeFeatureReminder,
                     ),
                     const SizedBox(height: 14),
-                    const _Feature(
+                    _Feature(
                       icon: Icons.share_outlined,
                       background: AppColors.blueSoft,
                       foreground: AppColors.diastolic,
-                      text: 'Esporti in PDF o CSV quando ti serve',
+                      text: l.welcomeFeatureExport,
                     ),
                     const Spacer(),
                     const SizedBox(height: 22),
@@ -71,16 +73,12 @@ class WelcomeScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Da sapere, una volta sola',
+                            l.welcomeNoticeTitle,
                             style: AppText.body(14, weight: FontWeight.w800),
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'PressSure è un diario personale: non è un '
-                            'dispositivo medico e non fa diagnosi. Le fasce '
-                            'predefinite seguono le linee guida europee ESC '
-                            '2024 e puoi cambiarle. Per dubbi sulla tua '
-                            'salute, rivolgiti al tuo medico.',
+                            l.welcomeNoticeBody,
                             style: AppText.body(
                               14,
                               weight: FontWeight.w500,
@@ -105,7 +103,7 @@ class WelcomeScreen extends StatelessWidget {
                           builder: (_) => const HabitScreen(onboarding: true),
                         ),
                       ),
-                      child: const Text('Ho capito, iniziamo'),
+                      child: Text(l.welcomeStart),
                     ),
                   ],
                 ),

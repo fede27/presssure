@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../logic/formatting.dart';
+import '../l10n/l10n.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
 import '../widgets/badge_view.dart';
@@ -20,6 +20,7 @@ class HighReadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final state = AppScope.of(context);
     final m = outcome.measurement;
     final usual = outcome.usualAverage;
@@ -27,11 +28,12 @@ class HighReadingScreen extends StatelessWidget {
     final schedule = state.schedule;
     final honest = outcome.newBadges.where((b) => b.id == 'honest').firstOrNull;
     final aboveUsual = usual != null && usual.isBelow(state.thresholds);
+    final when = context.dates.relative(m.takenAt, state.now(), l);
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          tooltip: 'Chiudi',
+          tooltip: l.close,
           icon: const Icon(Icons.close_rounded),
           onPressed: () => backToHome(context),
         ),
@@ -43,9 +45,7 @@ class HighReadingScreen extends StatelessWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: Pill(
-                label:
-                    'Serie salva · $streak '
-                    '${streak == 1 ? schedule.occasionSingular : schedule.occasionPlural}',
+                label: l.streakSafe(schedule.countOccasions(l, streak)),
                 background: AppColors.primarySoft,
                 foreground: AppColors.primary,
                 icon: Icons.check_rounded,
@@ -64,8 +64,7 @@ class HighReadingScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Misura salvata · '
-                  '${formatRelativeDateTime(m.takenAt, state.now()).toLowerCase()}',
+                  l.savedAt(when),
                   style: AppText.body(
                     14,
                     weight: FontWeight.w700,
@@ -76,9 +75,7 @@ class HighReadingScreen extends StatelessWidget {
                 Semantics(
                   header: true,
                   child: Text(
-                    aboveUsual
-                        ? 'Oggi è più alta del solito'
-                        : 'Oggi è sopra la soglia',
+                    aboveUsual ? l.higherThanUsual : l.aboveThresholdToday,
                     style: AppText.display(28, height: 1.15),
                   ),
                 ),
@@ -86,9 +83,8 @@ class HighReadingScreen extends StatelessWidget {
                 BpValue(systolic: m.systolic, diastolic: m.diastolic, size: 64),
                 const SizedBox(height: 8),
                 Text(
-                  '${usual == null ? '' : 'Di solito sei intorno a $usual. '}'
-                  'Se vuoi, puoi rimisurare dopo qualche minuto di riposo: '
-                  'il diario le tiene tutte e due.',
+                  '${usual == null ? '' : l.usuallyAround('$usual')}'
+                  '${l.remeasureHint}',
                   style: AppText.body(
                     14,
                     weight: FontWeight.w500,
@@ -117,9 +113,7 @@ class HighReadingScreen extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Valori così alti vanno ricontrollati. Se si confermano '
-                      'o se non ti senti bene, contatta il tuo medico o il '
-                      '112.',
+                      l.veryHighWarning,
                       style: AppText.body(
                         13,
                         weight: FontWeight.w700,
@@ -138,7 +132,7 @@ class HighReadingScreen extends StatelessWidget {
               Expanded(
                 child: FilledButton(
                   onPressed: () => _remeasure(context),
-                  child: const Text('Rimisura'),
+                  child: Text(l.remeasure),
                 ),
               ),
               const SizedBox(width: 10),
@@ -151,7 +145,7 @@ class HighReadingScreen extends StatelessWidget {
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => EntryScreen(existing: m)),
                   ),
-                  child: const Text('Aggiungi nota'),
+                  child: Text(l.addNote),
                 ),
               ),
             ],
@@ -168,11 +162,11 @@ class HighReadingScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Badge «${honest.title}»',
+                          l.badgeNamed(achievementTitle(honest, l, schedule)),
                           style: AppText.body(15, weight: FontWeight.w800),
                         ),
                         Text(
-                          'Anche i giorni no fanno parte del diario.',
+                          l.honestBody,
                           style: AppText.body(
                             13,
                             height: 1.4,
@@ -193,7 +187,7 @@ class HighReadingScreen extends StatelessWidget {
               style: TextButton.styleFrom(
                 textStyle: AppText.body(15, weight: FontWeight.w800),
               ),
-              child: const Text('Fatto'),
+              child: Text(l.done),
             ),
           ),
         ],

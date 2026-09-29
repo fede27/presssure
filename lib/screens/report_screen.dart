@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../logic/formatting.dart';
+import '../l10n/l10n.dart';
 import '../models/settings.dart';
 import '../services/report.dart';
 import '../services/report_pdf.dart';
@@ -28,10 +28,10 @@ class _ReportScreenState extends State<ReportScreen> {
   var _options = const ReportOptions();
   var _busy = false;
 
-  static const _rangeLabels = {
-    ReportRange.sinceLastShare: 'Dall’ultimo invio',
-    ReportRange.sixMonths: '6 mesi',
-    ReportRange.all: 'Tutto',
+  String _rangeLabel(AppLocalizations l, ReportRange r) => switch (r) {
+    ReportRange.sinceLastShare => l.rangeSinceLast,
+    ReportRange.sixMonths => l.range6m,
+    ReportRange.all => l.rangeAll,
   };
 
   ReportData _data(AppState state) => ReportData.build(
@@ -43,7 +43,9 @@ class _ReportScreenState extends State<ReportScreen> {
 
   String _fileName(AppState state, String ext) {
     final d = state.now();
-    return 'PressSure_diario_${d.year}-${two(d.month)}-${two(d.day)}.$ext';
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${context.l10n.fileNameBase}_'
+        '${d.year}-${two(d.month)}-${two(d.day)}.$ext';
   }
 
   Future<void> _run(Future<void> Function() action) async {
@@ -52,64 +54,76 @@ class _ReportScreenState extends State<ReportScreen> {
     try {
       await action();
     } catch (e) {
-      if (mounted) showSnack(context, 'Non è stato possibile completare: $e');
+      if (mounted) showSnack(context, context.l10n.errorGeneric('$e'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
   Future<Uint8List> _pdf(AppState state) =>
-      buildReportPdf(_data(state), _options);
+      buildReportPdf(_data(state), _options, context.l10n, context.dates);
 
   Future<void> _downloadPdf() => _run(() async {
     final state = AppScope.read(context);
+    final name = _fileName(state, 'pdf');
     final bytes = await _pdf(state);
     final done = await Printing.layoutPdf(
       onLayout: (_) async => bytes,
-      name: _fileName(state, 'pdf'),
+      name: name,
     );
     if (done) await state.recordShare();
   });
 
   Future<void> _sharePdf() => _run(() async {
     final state = AppScope.read(context);
+    final name = _fileName(state, 'pdf');
+    final subject = context.l10n.reportTitle;
     final bytes = await _pdf(state);
     final shared = await Printing.sharePdf(
       bytes: bytes,
-      filename: _fileName(state, 'pdf'),
-      subject: 'Diario della pressione',
+      filename: name,
+      subject: subject,
     );
     if (shared) await state.recordShare();
   });
 
   Future<void> _shareCsv() => _run(() async {
     final state = AppScope.read(context);
+    final l = context.l10n;
+    final name = _fileName(state, 'csv');
+    final csv = buildCsv(_data(state).items, l, context.dates);
     final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/${_fileName(state, 'csv')}');
-    await file.writeAsString(buildCsv(_data(state).items));
+    final file = File('${dir.path}/$name');
+    await file.writeAsString(csv);
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(file.path, mimeType: 'text/csv')],
-        subject: 'Diario della pressione (CSV)',
+        subject: l.csvSubject,
       ),
     );
   });
 
   void _openPreview() {
     final state = AppScope.read(context);
+    final name = _fileName(state, 'pdf');
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => Scaffold(
+        builder: (context) => Scaffold(
           appBar: AppBar(
-            title: const Text('Anteprima report'),
+            title: Text(context.l10n.previewTitle),
             titleSpacing: 0,
           ),
           body: PdfPreview(
-            build: (_) => _pdf(state),
+            build: (_) => buildReportPdf(
+              _data(state),
+              _options,
+              context.l10n,
+              context.dates,
+            ),
             canChangePageFormat: false,
             canChangeOrientation: false,
             canDebug: false,
-            pdfFileName: _fileName(state, 'pdf'),
+            pdfFileName: name,
             onShared: (_) => state.recordShare(),
             onPrinted: (_) => state.recordShare(),
           ),
@@ -122,33 +136,35 @@ class _ReportScreenState extends State<ReportScreen> {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          children: [
-            Text(
-              'Storico condivisioni',
-              style: AppText.body(16, weight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            if (settings.shares.isEmpty)
+      builder: (context) {
+        final l = context.l10n;
+        final dates = context.dates;
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            children: [
               Text(
-                'Nessuna condivisione.',
-                style: AppText.body(14, color: AppColors.muted),
+                l.shareHistory,
+                style: AppText.body(16, weight: FontWeight.w800),
               ),
-            for (final d in settings.shares.reversed)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.picture_as_pdf_outlined),
-                title: Text(
-                  '${capitalize(formatWeekdayDayMonth(d))} ${d.year}',
+              const SizedBox(height: 8),
+              if (settings.shares.isEmpty)
+                Text(
+                  l.noShares,
+                  style: AppText.body(14, color: AppColors.muted),
                 ),
-                subtitle: Text('alle ${formatTime(d)}'),
-              ),
-          ],
-        ),
-      ),
+              for (final d in settings.shares.reversed)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.picture_as_pdf_outlined),
+                  title: Text(capitalize(dates.fullDate(d))),
+                  subtitle: Text(l.atTime(dates.time(d))),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -165,6 +181,8 @@ class _ReportScreenState extends State<ReportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final dates = context.dates;
     final state = AppScope.of(context);
     final settings = state.settings;
     final data = _data(state);
@@ -187,12 +205,12 @@ class _ReportScreenState extends State<ReportScreen> {
                 Semantics(
                   header: true,
                   child: Text(
-                    'Esporta e condividi',
+                    l.exportAndShare,
                     style: AppText.display(30, weight: FontWeight.w700),
                   ),
                 ),
                 Text(
-                  'Il tuo diario in PDF o CSV, quando ti serve',
+                  l.reportScreenSubtitle,
                   style: AppText.body(14, color: AppColors.muted),
                 ),
               ],
@@ -211,8 +229,8 @@ class _ReportScreenState extends State<ReportScreen> {
                     children: [
                       Text(
                         lastShare == null
-                            ? 'Non hai ancora condiviso il diario'
-                            : 'Ultima condivisione: ${formatDayMonth(lastShare)}',
+                            ? l.neverShared
+                            : l.lastShared(dates.dayMonth(lastShare)),
                         style: AppText.body(
                           14,
                           weight: FontWeight.w800,
@@ -221,9 +239,7 @@ class _ReportScreenState extends State<ReportScreen> {
                       ),
                       if (lastShare != null)
                         Text(
-                          newSince == 1
-                              ? '1 misura nuova da allora'
-                              : '$newSince misure nuove da allora',
+                          l.newSince(newSince),
                           style: AppText.body(13, color: AppColors.ink2),
                         ),
                     ],
@@ -232,7 +248,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 if (lastShare != null)
                   TextButton(
                     onPressed: () => _showHistory(settings),
-                    child: const Text('Storico'),
+                    child: Text(l.history),
                   ),
               ],
             ),
@@ -245,14 +261,11 @@ class _ReportScreenState extends State<ReportScreen> {
                 Expanded(
                   flex: r == ReportRange.sinceLastShare ? 3 : 2,
                   child: ChoicePill(
-                    label: _rangeLabels[r]!,
+                    label: _rangeLabel(l, r),
                     selected: _range == r,
                     minHeight: 40,
                     onTap: r == ReportRange.sinceLastShare && lastShare == null
-                        ? () => showSnack(
-                            context,
-                            'Non hai ancora condiviso il diario.',
-                          )
+                        ? () => showSnack(context, l.notYetShared)
                         : () => setState(() => _range = r),
                   ),
                 ),
@@ -263,7 +276,7 @@ class _ReportScreenState extends State<ReportScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
-              data.isEmpty ? 'Nessuna misura nel periodo' : data.rangeLabel,
+              data.isEmpty ? l.noReadingsInPeriod : data.rangeLabel(l, dates),
               style: AppText.body(13, color: AppColors.muted),
             ),
           ),
@@ -276,29 +289,29 @@ class _ReportScreenState extends State<ReportScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Cosa includere',
+                  l.includeTitle,
                   style: AppText.body(15, weight: FontWeight.w800),
                 ),
                 _toggle(
-                  'Grafico dell’andamento',
+                  l.includeChart,
                   _options.chart,
                   (v) => setState(() => _options = _options.copyWith(chart: v)),
                 ),
                 _toggle(
-                  'Tabella di tutte le misurazioni',
+                  l.includeTable,
                   _options.table,
                   (v) => setState(() => _options = _options.copyWith(table: v)),
                 ),
                 _toggle(
-                  'Note',
+                  l.includeNotes,
                   _options.notes,
                   (v) => setState(() => _options = _options.copyWith(notes: v)),
                 ),
                 _toggle(
-                  'Foto del display',
+                  l.includePhotos,
                   false,
                   null,
-                  subtitle: 'Disponibile con la scansione del display',
+                  subtitle: l.includePhotosHint,
                 ),
               ],
             ),
@@ -314,12 +327,12 @@ class _ReportScreenState extends State<ReportScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'I tuoi dati nel report',
+                        l.profileTitle,
                         style: AppText.body(14, weight: FontWeight.w800),
                       ),
                       Text(
                         settings.profile.name.isEmpty
-                            ? 'Nome, data di nascita, apparecchio'
+                            ? l.profileHint
                             : settings.profile.name,
                         style: AppText.body(12, color: AppColors.muted),
                       ),
@@ -337,7 +350,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 child: FilledButton.icon(
                   onPressed: canExport ? _downloadPdf : null,
                   icon: const Icon(Icons.download_rounded, size: 20),
-                  label: const Text('Scarica PDF'),
+                  label: Text(l.downloadPdf),
                 ),
               ),
               const SizedBox(width: 10),
@@ -349,7 +362,7 @@ class _ReportScreenState extends State<ReportScreen> {
                     foregroundColor: AppColors.primary,
                   ),
                   icon: const Icon(Icons.share_outlined, size: 20),
-                  label: const Text('Condividi'),
+                  label: Text(l.share),
                 ),
               ),
             ],
@@ -357,7 +370,7 @@ class _ReportScreenState extends State<ReportScreen> {
           const SizedBox(height: 12),
           AppCard(
             padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-            onTap: () => showComingSoon(context, 'Link sicuro e QR'),
+            onTap: () => showComingSoon(context, l.secureLinkFeature),
             child: Row(
               children: [
                 const IconTile(
@@ -372,12 +385,11 @@ class _ReportScreenState extends State<ReportScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Link sicuro o QR',
+                        l.secureLinkTitle,
                         style: AppText.body(14, weight: FontWeight.w800),
                       ),
                       Text(
-                        'Si apre dal browser, scade dopo 30 giorni, revocabile '
-                        'quando vuoi. In arrivo.',
+                        l.secureLinkBody,
                         style: AppText.body(
                           12,
                           height: 1.4,
@@ -395,7 +407,7 @@ class _ReportScreenState extends State<ReportScreen> {
           Center(
             child: TextButton(
               onPressed: canExport ? _shareCsv : null,
-              child: const Text('Esporta i dati in CSV'),
+              child: Text(l.exportCsv),
             ),
           ),
           if (_busy)
@@ -434,12 +446,13 @@ class _PreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final t = data.thresholds;
     final rows = [
-      ('Misure', '${data.items.length}'),
-      ('Media', data.overall?.toString() ?? '–'),
-      ('Ultime 4', data.lastFour?.toString() ?? '–'),
-      ('Oltre ${t.highSystolic}/${t.highDiastolic}', '${data.highCount}'),
+      (l.previewReadings, '${data.items.length}'),
+      (l.previewAverage, data.overall?.toString() ?? '–'),
+      (l.previewLast4, data.lastFour?.toString() ?? '–'),
+      (l.bandHigh(t.highSystolic, t.highDiastolic), '${data.highCount}'),
     ];
     return AppCard(
       padding: const EdgeInsets.all(14),
@@ -448,7 +461,7 @@ class _PreviewCard extends StatelessWidget {
         children: [
           Semantics(
             button: true,
-            label: 'Apri l’anteprima del PDF',
+            label: l.openPreviewSemantics,
             excludeSemantics: true,
             child: GestureDetector(
               onTap: onOpen,
@@ -461,10 +474,10 @@ class _PreviewCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Anteprima report',
+                  l.previewTitle,
                   style: AppText.body(15, weight: FontWeight.w800),
                 ),
-                Text('PDF A4', style: AppText.body(12, color: AppColors.muted)),
+                Text(l.pdfA4, style: AppText.body(12, color: AppColors.muted)),
                 const SizedBox(height: 10),
                 for (final (label, value) in rows)
                   Padding(
@@ -492,7 +505,7 @@ class _PreviewCard extends StatelessWidget {
                   TextButton(
                     onPressed: onOpen,
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                    child: const Text('Apri anteprima'),
+                    child: Text(l.openPreview),
                   ),
               ],
             ),
@@ -611,37 +624,39 @@ class _ProfileDialogState extends State<_ProfileDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return AlertDialog(
-      title: const Text('I tuoi dati nel report'),
+      title: Text(l.profileTitle),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Restano sul telefono e compaiono solo nel PDF che esporti.',
+              l.profileIntro,
               style: AppText.body(13, color: AppColors.muted),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _name,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(labelText: 'Nome e cognome'),
+              decoration: InputDecoration(labelText: l.nameField),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _birth,
               keyboardType: TextInputType.datetime,
-              decoration: const InputDecoration(
-                labelText: 'Data di nascita',
-                hintText: 'GG/MM/AAAA',
+              decoration: InputDecoration(
+                labelText: l.birthField,
+                // An example in the local date format.
+                hintText: context.dates.numericDate(DateTime(1950, 12, 31)),
               ),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _device,
-              decoration: const InputDecoration(
-                labelText: 'Apparecchio',
-                hintText: 'Marca e modello',
+              decoration: InputDecoration(
+                labelText: l.deviceField,
+                hintText: l.deviceHint,
               ),
             ),
           ],
@@ -650,7 +665,7 @@ class _ProfileDialogState extends State<_ProfileDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Annulla'),
+          child: Text(l.cancel),
         ),
         TextButton(
           onPressed: () => Navigator.pop(
@@ -661,7 +676,7 @@ class _ProfileDialogState extends State<_ProfileDialog> {
               device: _device.text.trim(),
             ),
           ),
-          child: const Text('Salva'),
+          child: Text(l.save),
         ),
       ],
     );

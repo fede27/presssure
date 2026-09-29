@@ -1,5 +1,7 @@
+import 'package:intl/intl.dart';
+
+import '../l10n/l10n.dart';
 import '../logic/bp_category.dart';
-import '../logic/formatting.dart';
 import '../logic/schedule.dart';
 import '../logic/stats.dart';
 import '../models/measurement.dart';
@@ -46,18 +48,14 @@ class ReportData {
   }) {
     final sorted = sortedByDate(measurements);
     final schedule = Schedule.fromSettings(settings);
-    DateTime? from;
-    switch (range) {
-      case ReportRange.sinceLastShare:
-        from = settings.shares.lastOrNull;
-      case ReportRange.sixMonths:
-        from = DateTime(now.year, now.month - 6, now.day);
-      case ReportRange.all:
-        from = null;
-    }
+    final DateTime? from = switch (range) {
+      ReportRange.sinceLastShare => settings.shares.lastOrNull,
+      ReportRange.sixMonths => DateTime(now.year, now.month - 6, now.day),
+      ReportRange.all => null,
+    };
     final items = from == null
         ? sorted
-        : sorted.where((m) => !m.takenAt.isBefore(from!)).toList();
+        : sorted.where((m) => !m.takenAt.isBefore(from)).toList();
 
     final tracker = HabitTracker(schedule, sorted, now);
     final firstDay = items.isEmpty ? null : dateOnly(items.first.takenAt);
@@ -110,9 +108,12 @@ class ReportData {
 
   List<Measurement> get withNotes => items.where((m) => m.hasNote).toList();
 
-  String get rangeLabel =>
-      '${formatFullDate(from)} – ${formatFullDate(to)} · '
-      '${items.length} ${items.length == 1 ? 'misura' : 'misure'}';
+  /// "5 aprile 2026 – 27 settembre 2026 · 24 misure".
+  String rangeLabel(AppLocalizations l, Dates dates) => l.rangeLabel(
+    dates.fullDate(from),
+    dates.fullDate(to),
+    l.readingsCount(items.length),
+  );
 
   /// Table rows: readings and missed days, oldest first.
   List<({DateTime day, Measurement? m})> get rows {
@@ -124,41 +125,59 @@ class ReportData {
   }
 }
 
-String _csvField(String value) {
-  if (value.contains(RegExp('[;"\n\r]'))) {
+/// Where the decimal separator is a comma, spreadsheets expect semicolons.
+String csvSeparator(String locale) =>
+    NumberFormat.decimalPattern(locale).symbols.DECIMAL_SEP == ',' ? ';' : ',';
+
+String _csvField(String value, String separator) {
+  if (value.contains(separator) ||
+      value.contains('"') ||
+      value.contains('\n') ||
+      value.contains('\r')) {
     return '"${value.replaceAll('"', '""')}"';
   }
   return value;
 }
 
-String _armLabel(Arm a) => a == Arm.left ? 'sinistro' : 'destro';
+/// The readings as CSV, with headers, dates and separator for the locale.
+String buildCsv(List<Measurement> items, AppLocalizations l, Dates dates) {
+  final sep = csvSeparator(dates.locale);
+  String row(List<Object> cells) =>
+      cells.map((c) => _csvField('$c', sep)).join(sep);
 
-String _postureLabel(Posture p) => switch (p) {
-  Posture.sitting => 'seduto',
-  Posture.standing => 'in piedi',
-  Posture.lying => 'sdraiato',
-};
-
-/// Semicolon-separated values, as Italian spreadsheets expect.
-String buildCsv(List<Measurement> items) {
-  final buffer = StringBuffer(
-    'Data;Ora;Sistolica;Diastolica;Polso;Braccio;Posizione;Origine;'
-    'Doppia lettura;Nota\n',
-  );
+  final buffer = StringBuffer()
+    ..writeln(
+      row([
+        l.colDate,
+        l.colTime,
+        l.systolic,
+        l.diastolic,
+        l.pulse,
+        l.arm,
+        l.posture,
+        l.csvSource,
+        l.csvDouble,
+        l.note,
+      ]),
+    );
   for (final m in sortedByDate(items)) {
     buffer.writeln(
-      [
-        formatNumericDate(m.takenAt),
-        formatTime(m.takenAt),
+      row([
+        dates.numericDate(m.takenAt),
+        dates.time(m.takenAt),
         m.systolic,
         m.diastolic,
         m.pulse ?? '',
-        _armLabel(m.arm),
-        _postureLabel(m.posture),
-        m.source == ReadingSource.photo ? 'foto' : 'manuale',
-        m.doubleReading ? 'sì' : 'no',
-        _csvField(m.note.trim()),
-      ].join(';'),
+        m.arm == Arm.left ? l.armLeft : l.armRight,
+        switch (m.posture) {
+          Posture.sitting => l.postureSitting,
+          Posture.standing => l.postureStanding,
+          Posture.lying => l.postureLying,
+        },
+        m.source == ReadingSource.photo ? l.csvPhoto : l.csvManual,
+        m.doubleReading ? l.yes : l.no,
+        m.note.trim(),
+      ]),
     );
   }
   return buffer.toString();

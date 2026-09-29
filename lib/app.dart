@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'l10n/l10n.dart';
 import 'screens/home_shell.dart';
 import 'screens/welcome_screen.dart';
 import 'state/app_state.dart';
@@ -40,16 +40,24 @@ class _PressSureAppState extends State<PressSureApp>
     return AppScope(
       state: widget.state,
       child: MaterialApp(
-        title: 'PressSure',
+        onGenerateTitle: (context) => context.l10n.appTitle,
         debugShowCheckedModeBanner: false,
         theme: buildTheme(),
-        locale: const Locale('it'),
-        supportedLocales: const [Locale('it')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
+        // No fixed locale: the phone's language is used when supported,
+        // English otherwise.
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: (context, child) {
+          final locale = Localizations.localeOf(context);
+          widget.state.updateLocale(
+            locale,
+            dateLocaleFor(
+              locale,
+              WidgetsBinding.instance.platformDispatcher.locales,
+            ),
+          );
+          return child!;
+        },
         home: const _Root(),
       ),
     );

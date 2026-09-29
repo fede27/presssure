@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:presssure/app.dart';
+import 'package:presssure/l10n/l10n.dart';
 import 'package:presssure/models/measurement.dart';
 import 'package:presssure/models/settings.dart';
 import 'package:presssure/services/reminders.dart';
@@ -84,12 +85,19 @@ List<Measurement> designReadings({bool includeToday = false}) {
 
 const onboardedSettings = AppSettings(onboarded: true);
 
+/// Italian texts and dates, as most tests expect.
+final itL10n = lookupAppLocalizations(const Locale('it'));
+final itDates = Dates('it');
+final enL10n = lookupAppLocalizations(const Locale('en'));
+final enDates = Dates('en_US');
+
 /// Prepares shared preferences with the given data and returns the state.
 Future<AppState> makeState({
   List<Measurement> measurements = const [],
   AppSettings settings = onboardedSettings,
   DateTime? now,
   ReminderService? reminders,
+  Locale locale = const Locale('it'),
 }) async {
   SharedPreferences.setMockInitialValues({
     'measurements.v1': jsonEncode(measurements.map((m) => m.toJson()).toList()),
@@ -100,19 +108,24 @@ Future<AppState> makeState({
     repository: await Repository.open(),
     reminders: reminders ?? NoopReminderService(),
     clock: () => clock,
+    locale: locale,
   );
 }
 
-/// Pumps the whole app on a tall phone-sized screen.
+/// Pumps the whole app on a tall phone-sized screen, with the phone set to
+/// [locale] (Italian by default).
 Future<AppState> pumpApp(
   WidgetTester tester, {
   List<Measurement> measurements = const [],
   AppSettings settings = onboardedSettings,
   DateTime? now,
+  Locale locale = const Locale('it', 'IT'),
 }) async {
   tester.view.physicalSize = const Size(1170, 6000);
   tester.view.devicePixelRatio = 3;
   addTearDown(tester.view.reset);
+  tester.platformDispatcher.localesTestValue = [locale];
+  addTearDown(tester.platformDispatcher.clearLocalesTestValue);
   final state = await makeState(
     measurements: measurements,
     settings: settings,

@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../logic/formatting.dart';
+import '../l10n/l10n.dart';
 import '../logic/schedule.dart';
 import '../logic/stats.dart';
 import '../models/measurement.dart';
@@ -22,7 +22,7 @@ class BpChart extends StatelessWidget {
     this.compact = false,
     this.height = 244,
     this.periodDays = 7,
-    this.highlightLabel = 'Ultima',
+    this.highlightLabel,
   });
 
   /// Oldest first.
@@ -38,37 +38,53 @@ class BpChart extends StatelessWidget {
 
   /// Typical distance between readings; longer gaps break the average line.
   final double periodDays;
-  final String highlightLabel;
 
-  String get _description {
-    if (items.isEmpty) return 'Nessuna misura nel periodo';
+  /// Label of the latest-reading tooltip; "Ultima" by default.
+  final String? highlightLabel;
+
+  String _description(AppLocalizations l, Dates dates) {
+    if (items.isEmpty) return l.noReadingsInPeriod;
     final first = items.first;
     final last = items.last;
-    return 'Misure da ${formatDayMonth(first.takenAt)} '
-        'a ${formatDayMonth(last.takenAt)}: sistolica da ${first.systolic} '
-        'a ${last.systolic}, diastolica da ${first.diastolic} '
-        'a ${last.diastolic} mmHg';
+    return l.chartDescription(
+      dates.dayMonth(first.takenAt),
+      dates.dayMonth(last.takenAt),
+      first.systolic,
+      last.systolic,
+      first.diastolic,
+      last.diastolic,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final dates = context.dates;
     return Semantics(
-      label: _description,
+      label: _description(l, dates),
       image: true,
       excludeSemantics: true,
       child: SizedBox(
         height: height,
         width: double.infinity,
-        child: CustomPaint(painter: _BpChartPainter(this)),
+        child: CustomPaint(
+          painter: _BpChartPainter(
+            this,
+            highlightLabel ?? l.latest,
+            dates.monthShort,
+          ),
+        ),
       ),
     );
   }
 }
 
 class _BpChartPainter extends CustomPainter {
-  _BpChartPainter(this.chart);
+  _BpChartPainter(this.chart, this.highlightLabel, this.monthLabel);
 
   final BpChart chart;
+  final String highlightLabel;
+  final String Function(int month) monthLabel;
 
   static const _labelStyle = TextStyle(
     fontFamily: 'Manrope',
@@ -267,7 +283,7 @@ class _BpChartPainter extends CustomPainter {
       )..layout();
       final label = TextPainter(
         text: TextSpan(
-          text: chart.highlightLabel,
+          text: highlightLabel,
           style: AppText.body(
             10,
             weight: FontWeight.w700,
@@ -317,7 +333,7 @@ class _BpChartPainter extends CustomPainter {
       final start = i == 0;
       _text(
         canvas,
-        monthShort[date.month - 1],
+        monthLabel(date.month),
         Offset(lx, atY),
         _labelStyle,
         align: start ? TextAlign.left : TextAlign.center,
@@ -327,5 +343,6 @@ class _BpChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_BpChartPainter old) => old.chart != chart;
+  bool shouldRepaint(_BpChartPainter old) =>
+      old.chart != chart || old.highlightLabel != highlightLabel;
 }

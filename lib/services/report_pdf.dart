@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../logic/formatting.dart';
+import '../l10n/l10n.dart';
 import '../logic/stats.dart';
 import 'report.dart';
 
@@ -26,7 +26,9 @@ String _s(String text) => text
     .replaceAll('“', '"')
     .replaceAll('”', '"')
     .replaceAll('«', '"')
-    .replaceAll('»', '"');
+    .replaceAll('»', '"')
+    .replaceAll(' ', ' ')
+    .replaceAll(' ', ' ');
 
 pw.Text _t(
   String text, {
@@ -42,14 +44,20 @@ pw.Text _t(
   ),
 );
 
-/// Builds the A4 report shown in the design ("08 · PDF esportato").
-Future<Uint8List> buildReportPdf(ReportData data, ReportOptions options) {
+/// Builds the A4 report shown in the design ("08 · PDF esportato"), in the
+/// language of [l] with dates formatted by [dates].
+Future<Uint8List> buildReportPdf(
+  ReportData data,
+  ReportOptions options,
+  AppLocalizations l,
+  Dates dates,
+) {
   final doc = pw.Document(
-    title: 'Diario della pressione',
+    title: l.reportTitle,
     author: data.settings.profile.name.isEmpty
-        ? 'PressSure'
+        ? l.appTitle
         : data.settings.profile.name,
-    creator: 'PressSure',
+    creator: l.appTitle,
   );
   final t = data.thresholds;
 
@@ -66,18 +74,18 @@ Future<Uint8List> buildReportPdf(ReportData data, ReportOptions options) {
             children: [
               pw.Expanded(
                 child: _t(
-                  '* con nota. Fasce e soglia ${t.highSystolic}/${t.highDiastolic}'
-                  ' mmHg: ${t.isEsc2024 ? 'linee guida europee ESC 2024 per la '
-                            'misurazione a domicilio' : 'soglie personalizzate'}. '
-                  'Valori confermati dall\'utente. PressSure è un diario '
-                  'personale, non un dispositivo medico.',
+                  l.reportFooter(
+                    t.highSystolic,
+                    t.highDiastolic,
+                    t.isEsc2024 ? l.footerSourceEsc : l.footerSourceCustom,
+                  ),
                   size: 7,
                   color: _muted,
                 ),
               ),
               pw.SizedBox(width: 16),
               _t(
-                'Pagina ${context.pageNumber} di ${context.pagesCount}',
+                l.pageOf(context.pageNumber, context.pagesCount),
                 size: 7,
                 color: _muted,
               ),
@@ -86,22 +94,22 @@ Future<Uint8List> buildReportPdf(ReportData data, ReportOptions options) {
         ],
       ),
       build: (context) => [
-        _header(data),
+        _header(data, l, dates),
         pw.SizedBox(height: 12),
-        _profile(data),
+        _profile(data, l),
         pw.SizedBox(height: 12),
-        _summary(data),
+        _summary(data, l, dates),
         if (options.chart && data.items.length >= 2) ...[
           pw.SizedBox(height: 16),
-          _chart(data),
+          _chart(data, l, dates),
         ],
         if (options.notes && data.withNotes.isNotEmpty) ...[
           pw.SizedBox(height: 16),
-          _notes(data),
+          _notes(data, l, dates),
         ],
         if (options.table && data.items.isNotEmpty) ...[
           pw.SizedBox(height: 16),
-          _table(data),
+          _table(data, l, dates),
         ],
       ],
     ),
@@ -109,7 +117,7 @@ Future<Uint8List> buildReportPdf(ReportData data, ReportOptions options) {
   return doc.save();
 }
 
-pw.Widget _header(ReportData data) {
+pw.Widget _header(ReportData data, AppLocalizations l, Dates dates) {
   return pw.Row(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
@@ -117,11 +125,14 @@ pw.Widget _header(ReportData data) {
         child: pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            _t('Diario della pressione', size: 20, bold: true),
+            _t(l.reportTitle, size: 20, bold: true),
             pw.SizedBox(height: 4),
             _t(
-              'Misure a domicilio, ${data.schedule.describe()} · '
-              '${formatFullDate(data.from)} – ${formatFullDate(data.to)}',
+              l.reportSubtitle(
+                data.schedule.describe(l),
+                dates.fullDate(data.from),
+                dates.fullDate(data.to),
+              ),
               size: 10,
               color: _muted,
             ),
@@ -135,7 +146,7 @@ pw.Widget _header(ReportData data) {
           borderRadius: pw.BorderRadius.circular(6),
         ),
         child: _t(
-          'Generato il ${formatNumericDate(data.generatedAt)}',
+          l.generatedOn(dates.numericDate(data.generatedAt)),
           size: 8,
           color: _muted,
         ),
@@ -144,7 +155,7 @@ pw.Widget _header(ReportData data) {
   );
 }
 
-pw.Widget _profile(ReportData data) {
+pw.Widget _profile(ReportData data, AppLocalizations l) {
   final p = data.settings.profile;
   pw.Widget field(String label, String value) => pw.Expanded(
     child: pw.Column(
@@ -163,9 +174,9 @@ pw.Widget _profile(ReportData data) {
     ),
     child: pw.Row(
       children: [
-        field('Paziente', p.name),
-        field('Data di nascita', p.birthDate),
-        field('Apparecchio', p.device),
+        field(l.patient, p.name),
+        field(l.birthField, p.birthDate),
+        field(l.deviceField, p.device),
       ],
     ),
   );
@@ -194,7 +205,7 @@ pw.Widget _box(String label, String value, String detail) {
   );
 }
 
-pw.Widget _summary(ReportData data) {
+pw.Widget _summary(ReportData data, AppLocalizations l, Dates dates) {
   final last4 = data.lastFour;
   final q = data.quarters;
   final all = data.overall;
@@ -205,28 +216,28 @@ pw.Widget _summary(ReportData data) {
   return pw.Row(
     children: [
       _box(
-        'Ultime 4 misure',
+        l.lastNReadings(4),
         last4?.toString() ?? '-',
         lastItems.isEmpty
             ? ''
-            : '${formatDayMonthShort(lastItems.first.takenAt)} – '
-                  '${formatDayMonthShort(lastItems.last.takenAt)}',
+            : '${dates.dayMonthShort(lastItems.first.takenAt)} – '
+                  '${dates.dayMonthShort(lastItems.last.takenAt)}',
       ),
       _box(
-        capitalize(formatMonthRange(q.previousFrom, q.previousTo)),
+        capitalize(dates.monthRange(q.previousFrom, q.previousTo)),
         q.previous?.toString() ?? '-',
-        '${q.previous?.count ?? 0} misure',
+        l.readingsCount(q.previous?.count ?? 0),
       ),
       _box(
-        capitalize(formatMonthRange(q.currentFrom, q.currentTo)),
+        capitalize(dates.monthRange(q.currentFrom, q.currentTo)),
         q.current?.toString() ?? '-',
-        '${q.current?.count ?? 0} misure',
+        l.readingsCount(q.current?.count ?? 0),
       ),
-      _box('Polso medio', all?.pulse?.toString() ?? '-', 'bpm'),
+      _box(l.averagePulse, all?.pulse?.toString() ?? '-', 'bpm'),
       _box(
-        'Oltre ${t.highSystolic}/${t.highDiastolic}',
-        '${data.highCount} su ${data.items.length}',
-        'misure',
+        l.bandHigh(t.highSystolic, t.highDiastolic),
+        l.progressOf(data.highCount, data.items.length),
+        l.nounReadings(data.items.length),
       ),
     ],
   );
@@ -245,7 +256,7 @@ pw.Widget _legend(PdfColor color, String label, {bool dashed = false}) {
   );
 }
 
-pw.Widget _chart(ReportData data) {
+pw.Widget _chart(ReportData data, AppLocalizations l, Dates dates) {
   const height = 170.0;
   final items = data.items;
   final t = data.thresholds;
@@ -277,11 +288,11 @@ pw.Widget _chart(ReportData data) {
     children: [
       pw.Row(
         children: [
-          pw.Expanded(child: _t('Andamento', size: 12, bold: true)),
-          _legend(_sys, 'Sistolica'),
-          _legend(_dia, 'Diastolica'),
-          _legend(_muted, 'Media ultime 4'),
-          _legend(_sysLine, 'Soglia', dashed: true),
+          pw.Expanded(child: _t(l.reportChart, size: 12, bold: true)),
+          _legend(_sys, l.systolic),
+          _legend(_dia, l.diastolic),
+          _legend(_muted, l.legendAvg4),
+          _legend(_sysLine, l.legendThreshold, dashed: true),
         ],
       ),
       pw.SizedBox(height: 8),
@@ -353,7 +364,7 @@ pw.Widget _chart(ReportData data) {
               left: left,
               top: height + 4,
               child: _t(
-                formatNumericDate(items.first.takenAt),
+                dates.numericDate(items.first.takenAt),
                 size: 7,
                 color: _muted,
               ),
@@ -362,7 +373,7 @@ pw.Widget _chart(ReportData data) {
               right: 0,
               top: height + 4,
               child: _t(
-                formatNumericDate(items.last.takenAt),
+                dates.numericDate(items.last.takenAt),
                 size: 7,
                 color: _muted,
               ),
@@ -374,11 +385,11 @@ pw.Widget _chart(ReportData data) {
   );
 }
 
-pw.Widget _notes(ReportData data) {
+pw.Widget _notes(ReportData data, AppLocalizations l, Dates dates) {
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
-      _t('Note', size: 12, bold: true),
+      _t(l.reportNotes, size: 12, bold: true),
       pw.SizedBox(height: 6),
       for (final m in data.withNotes)
         pw.Padding(
@@ -387,8 +398,8 @@ pw.Widget _notes(ReportData data) {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.SizedBox(
-                width: 80,
-                child: _t(formatDayMonth(m.takenAt), bold: true),
+                width: 90,
+                child: _t(dates.dayMonth(m.takenAt), bold: true),
               ),
               pw.Expanded(child: _t('"${m.note.trim()}"')),
             ],
@@ -398,7 +409,7 @@ pw.Widget _notes(ReportData data) {
   );
 }
 
-pw.Widget _table(ReportData data) {
+pw.Widget _table(ReportData data, AppLocalizations l, Dates dates) {
   final t = data.thresholds;
   pw.Widget cell(String text, {bool bold = false, PdfColor color = _ink}) =>
       pw.Padding(
@@ -414,14 +425,11 @@ pw.Widget _table(ReportData data) {
           style: const pw.TextStyle(fontSize: 12, color: _ink),
           children: [
             pw.TextSpan(
-              text: 'Tutte le misure ',
+              text: _s(l.reportAllReadings),
               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
             ),
             pw.TextSpan(
-              text: _s(
-                '· in grassetto quelle oltre '
-                '${t.highSystolic}/${t.highDiastolic}',
-              ),
+              text: _s(l.reportBoldNote(t.highSystolic, t.highDiastolic)),
               style: const pw.TextStyle(fontSize: 8, color: _muted),
             ),
           ],
@@ -430,9 +438,9 @@ pw.Widget _table(ReportData data) {
       pw.SizedBox(height: 6),
       pw.Table(
         columnWidths: const {
-          0: pw.FixedColumnWidth(60),
-          1: pw.FixedColumnWidth(40),
-          2: pw.FixedColumnWidth(60),
+          0: pw.FixedColumnWidth(64),
+          1: pw.FixedColumnWidth(48),
+          2: pw.FixedColumnWidth(56),
           3: pw.FixedColumnWidth(40),
           4: pw.FlexColumnWidth(),
         },
@@ -445,20 +453,20 @@ pw.Widget _table(ReportData data) {
               border: pw.Border(bottom: pw.BorderSide(color: _primary)),
             ),
             children: [
-              cell('Data', bold: true),
-              cell('Ora', bold: true),
+              cell(l.colDate, bold: true),
+              cell(l.colTime, bold: true),
               cell('mmHg', bold: true),
-              cell('Polso', bold: true),
-              cell('Nota', bold: true),
+              cell(l.pulse, bold: true),
+              cell(l.note, bold: true),
             ],
           ),
           for (final row in data.rows)
             if (row.m == null)
               pw.TableRow(
                 children: [
-                  cell(formatNumericDate(row.day), color: _muted),
+                  cell(dates.numericDate(row.day), color: _muted),
                   cell(''),
-                  cell('nessuna misura', color: _muted),
+                  cell(l.noReading, color: _muted),
                   cell(''),
                   cell(''),
                 ],
@@ -467,9 +475,9 @@ pw.Widget _table(ReportData data) {
               pw.TableRow(
                 children: [
                   cell(
-                    formatNumericDate(row.day) + (row.m!.hasNote ? ' *' : ''),
+                    dates.numericDate(row.day) + (row.m!.hasNote ? ' *' : ''),
                   ),
-                  cell(formatTime(row.m!.takenAt)),
+                  cell(dates.time(row.m!.takenAt)),
                   cell(
                     '${row.m!.systolic}/${row.m!.diastolic}',
                     bold: data.isHigh(row.m!),

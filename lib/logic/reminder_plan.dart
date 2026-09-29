@@ -1,6 +1,6 @@
+import '../l10n/l10n.dart';
 import '../models/measurement.dart';
 import '../models/settings.dart';
-import 'formatting.dart';
 import 'schedule.dart';
 import 'stats.dart';
 
@@ -25,17 +25,17 @@ const summaryIdBase = 300;
 /// Title and body of the regular reminder, also shown as a preview in the
 /// habit screen.
 ({String title, String body}) reminderText(
+  AppLocalizations l,
   Schedule schedule,
   DateTime due,
   Measurement? last,
 ) {
   final title = schedule.frequency == Frequency.daily
-      ? 'È ora: 2 minuti per la pressione'
-      : 'È ${weekdayName(due.weekday)}: 2 minuti per la pressione';
+      ? l.reminderTitleDaily
+      : l.reminderTitleDay(l.weekdayName(weekdayKey(due.weekday)));
   final body = last == null
-      ? 'Siediti, rilassati e registra la tua prima misura.'
-      : 'L’ultima volta ${last.systolic}/${last.diastolic}. '
-            'Misura e segna i valori: hai finito.';
+      ? l.reminderBodyFirst
+      : l.reminderBody('${last.systolic}/${last.diastolic}');
   return (title: title, body: body);
 }
 
@@ -48,6 +48,8 @@ List<PlannedReminder> planReminders({
   required AppSettings settings,
   required List<Measurement> measurements,
   required DateTime now,
+  required AppLocalizations l10n,
+  required Dates dates,
   int count = 8,
 }) {
   final schedule = Schedule.fromSettings(settings);
@@ -70,18 +72,25 @@ List<PlannedReminder> planReminders({
       settings.frequency != Frequency.daily &&
       settings.frequency != Frequency.fewTimesWeek;
 
+  PlannedReminder nudge(int index, DateTime dueDay) => PlannedReminder(
+    nudgeIdBase + index,
+    _at(addDays(dueDay, 1), settings),
+    l10n.nudgeTitle(l10n.weekdayName(weekdayKey(dueDay.weekday))),
+    l10n.nudgeBody,
+  );
+
   // A nudge for the current period when its reminder already went off and
   // nothing was measured yet.
   if (nudges && !currentDone && !remindToday) {
-    final nudgeAt = _at(addDays(current.start, 1), settings);
-    if (nudgeAt.isAfter(now) &&
-        addDays(current.start, 1).isBefore(current.end)) {
-      result.add(_nudge(0, nudgeAt, schedule, current.start, last));
+    final nudgeDay = addDays(current.start, 1);
+    if (_at(nudgeDay, settings).isAfter(now) &&
+        nudgeDay.isBefore(current.end)) {
+      result.add(nudge(0, current.start));
     }
   }
 
   for (var i = 0; i < count; i++) {
-    final text = reminderText(schedule, due, last);
+    final text = reminderText(l10n, schedule, due, last);
     result.add(
       PlannedReminder(
         reminderIdBase + i,
@@ -92,9 +101,7 @@ List<PlannedReminder> planReminders({
     );
     final next = schedule.nextDueAfter(due);
     if (nudges && addDays(due, 1).isBefore(next)) {
-      result.add(
-        _nudge(i + 1, _at(addDays(due, 1), settings), schedule, due, last),
-      );
+      result.add(nudge(i + 1, due));
     }
     due = next;
   }
@@ -108,16 +115,15 @@ List<PlannedReminder> planReminders({
         DateTime(now.year, now.month + 1),
       );
       final avg = average(month);
-      final name = capitalize(monthName(now.month));
+      final name = capitalize(dates.monthName(now.month));
       result.add(
         PlannedReminder(
           summaryIdBase,
           lastDay,
-          'Il tuo $name',
+          l10n.summaryTitle(dates.monthName(now.month)),
           avg == null
-              ? '$name: nessuna misura. Il mese nuovo è un buon inizio.'
-              : '$name: ${avg.count} ${avg.count == 1 ? 'misura' : 'misure'}, '
-                    'media $avg.',
+              ? l10n.summaryEmpty(name)
+              : l10n.summaryBody(name, avg.count, '$avg'),
         ),
       );
     }
@@ -127,18 +133,3 @@ List<PlannedReminder> planReminders({
 
 DateTime _at(DateTime day, AppSettings s) =>
     DateTime(day.year, day.month, day.day, s.reminderHour, s.reminderMinute);
-
-PlannedReminder _nudge(
-  int index,
-  DateTime at,
-  Schedule schedule,
-  DateTime due,
-  Measurement? last,
-) {
-  return PlannedReminder(
-    nudgeIdBase + index,
-    at,
-    'Ieri era ${weekdayName(due.weekday)}',
-    'Nessun problema: misura oggi e la serie continua.',
-  );
-}
