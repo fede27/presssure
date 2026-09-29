@@ -1,37 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const PressSureApp());
-}
+import 'app.dart';
+import 'services/reminders.dart';
+import 'services/repository.dart';
+import 'state/app_state.dart';
 
-class PressSureApp extends StatelessWidget {
-  const PressSureApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'PressSure',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
-      ),
-      home: const HomePage(),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('PressSure'),
-      ),
-      body: const Center(
-        child: Text('Diario della pressione'),
-      ),
-    );
-  }
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final state = AppState(
+    repository: await Repository.open(),
+    reminders: LocalNotificationReminderService(),
+  );
+  runApp(PressSureApp(state: state));
+  unawaited(state.startReminders());
 }
