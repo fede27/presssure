@@ -21,6 +21,7 @@ class PlannedReminder {
 const reminderIdBase = 100;
 const nudgeIdBase = 200;
 const summaryIdBase = 300;
+const backupIdBase = 400;
 
 /// Title and body of the regular reminder, also shown as a preview in the
 /// habit screen.
@@ -42,8 +43,8 @@ const summaryIdBase = 300;
 /// The reminders to schedule from [now], replacing any previous ones.
 ///
 /// Covers the next [count] due days (skipping the current one when already
-/// measured), an optional nudge the day after each due day, and the
-/// end-of-month summary.
+/// measured), an optional nudge the day after each due day, the
+/// end-of-month summary and the monthly backup reminder.
 List<PlannedReminder> planReminders({
   required AppSettings settings,
   required List<Measurement> measurements,
@@ -52,6 +53,9 @@ List<PlannedReminder> planReminders({
   required Dates dates,
   int count = 8,
 }) {
+  // Before the welcome (or after erasing everything) there is no habit yet.
+  if (!settings.onboarded) return const [];
+
   final schedule = Schedule.fromSettings(settings);
   final sorted = sortedByDate(measurements);
   final last = sorted.lastOrNull;
@@ -127,6 +131,22 @@ List<PlannedReminder> planReminders({
         ),
       );
     }
+  }
+
+  // A month after the last backup (or after the first reading, if none);
+  // when that day has gone by, the next day.
+  if (settings.backupReminder && last != null) {
+    final since = settings.lastBackup ?? sorted.first.takenAt;
+    var at = _at(DateTime(since.year, since.month + 1, since.day), settings);
+    if (!at.isAfter(now)) at = _at(addDays(dateOnly(now), 1), settings);
+    result.add(
+      PlannedReminder(
+        backupIdBase,
+        at,
+        l10n.backupReminderTitle,
+        l10n.backupReminderBody,
+      ),
+    );
   }
   return result;
 }

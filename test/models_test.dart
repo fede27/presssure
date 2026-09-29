@@ -52,8 +52,9 @@ void main() {
       monthlySummary: false,
       thresholds: const Thresholds(highSystolic: 140, highDiastolic: 90),
       anchor: DateTime(2026, 9, 1),
-      profile: const ReportProfile(name: 'Mario Rossi'),
       shares: [DateTime(2026, 6, 14)],
+      backupReminder: false,
+      lastBackup: DateTime(2026, 9, 1, 21),
     );
     final back = AppSettings.fromJson(
       (jsonDecode(jsonEncode(s.toJson())) as Map).cast<String, Object?>(),
@@ -68,8 +69,9 @@ void main() {
     expect(back.thresholds.highSystolic, 140);
     expect(back.thresholds.elevatedSystolic, 120);
     expect(back.anchor, DateTime(2026, 9, 1));
-    expect(back.profile.name, 'Mario Rossi');
     expect(back.shares, [DateTime(2026, 6, 14)]);
+    expect(back.backupReminder, isFalse);
+    expect(back.lastBackup, DateTime(2026, 9, 1, 21));
   });
 
   test('defaults: weekly on Sunday at 8, ESC 2024', () {
@@ -79,5 +81,7 @@ void main() {
     expect(s.weekdays, {DateTime.sunday});
     expect(s.reminderHour, 8);
     expect(s.thresholds.isEsc2024, isTrue);
+    expect(s.backupReminder, isTrue);
+    expect(s.lastBackup, isNull);
   });
 }

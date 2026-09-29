@@ -8,6 +8,7 @@ import '../logic/schedule.dart';
 import '../logic/stats.dart';
 import '../models/measurement.dart';
 import '../models/settings.dart';
+import '../services/backup.dart';
 import '../services/reminders.dart';
 import '../services/repository.dart';
 
@@ -165,16 +166,60 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateSettings(AppSettings settings) async {
+  Future<void> updateSettings(
+    AppSettings settings, {
+    bool reschedule = true,
+  }) async {
     _settings = settings;
     _invalidate();
+    await _repository.saveSettings(_settings);
+    if (reschedule) await _reschedule();
+    notifyListeners();
+  }
+
+  /// Thresholds only change bands and charts, not reminders.
+  Future<void> updateThresholds(Thresholds thresholds) => updateSettings(
+    _settings.copyWith(thresholds: thresholds),
+    reschedule: false,
+  );
+
+  Future<void> recordShare() =>
+      updateSettings(_settings.copyWith(shares: [..._settings.shares, now()]));
+
+  Backup createBackup() => Backup(
+    createdAt: now(),
+    measurements: _measurements,
+    settings: _settings,
+  );
+
+  /// Called once the backup file was saved: moves the monthly reminder on.
+  Future<void> recordBackup(DateTime at) =>
+      updateSettings(_settings.copyWith(lastBackup: at));
+
+  /// Replaces the diary and the settings with the ones in [backup].
+  Future<void> restoreBackup(Backup backup) async {
+    _measurements = sortedByDate(backup.measurements);
+    _settings = backup.settings.copyWith(
+      onboarded: true,
+      lastBackup: backup.createdAt,
+    );
+    _invalidate();
+    await _repository.saveMeasurements(_measurements);
     await _repository.saveSettings(_settings);
     await _reschedule();
     notifyListeners();
   }
 
-  Future<void> recordShare() =>
-      updateSettings(_settings.copyWith(shares: [..._settings.shares, now()]));
+  /// Erases readings and settings: the app starts over from the welcome.
+  Future<void> deleteAllData() async {
+    _measurements = [];
+    _settings = const AppSettings();
+    _invalidate();
+    await _repository.saveMeasurements(_measurements);
+    await _repository.saveSettings(_settings);
+    await _reschedule();
+    notifyListeners();
+  }
 }
 
 /// Makes [AppState] available to the widget tree.

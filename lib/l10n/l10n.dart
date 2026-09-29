@@ -134,24 +134,6 @@ String greetingKey(DateTime now) {
 }
 
 extension ScheduleText on Schedule {
-  /// "domeniche", "giorni" or "misure", agreeing with [count].
-  String occasions(AppLocalizations l, int count) => switch (frequency) {
-    Frequency.daily => l.nounDays(count),
-    Frequency.fewTimesWeek => l.nounReadings(count),
-    _ =>
-      count == 1
-          ? l.weekdayName(weekdayKey(day))
-          : l.weekdayPlural(weekdayKey(day)),
-  };
-
-  /// "6 domeniche di fila".
-  String inARow(AppLocalizations l, int count) =>
-      l.inARow(count, occasions(l, count));
-
-  /// "6 domeniche".
-  String countOccasions(AppLocalizations l, int count) =>
-      l.countNoun(count, occasions(l, count));
-
   /// "ogni domenica", "ogni giorno", "lunedì e giovedì"...
   String describe(AppLocalizations l) {
     final key = weekdayKey(day);
@@ -175,13 +157,6 @@ extension ScheduleText on Schedule {
         return l.scheduleMonthly(key);
     }
   }
-
-  /// Selector for the monthly-joker sentence.
-  String get jollyKind => switch (frequency) {
-    Frequency.daily => 'day',
-    Frequency.fewTimesWeek => 'reading',
-    _ => weekdayKey(day),
-  };
 }
 
 extension BpCategoryText on BpCategory {
@@ -207,30 +182,26 @@ extension BpCategoryText on BpCategory {
   };
 }
 
-String achievementTitle(Achievement a, AppLocalizations l, Schedule schedule) =>
-    switch (a.id) {
-      'first_step' => l.badgeFirstStep,
-      'two_months' => l.badgeTwoMonths,
-      'three_months' => l.badgeThreeMonths,
-      'six_months' => l.badgeSixMonths,
-      'month_complete' => l.badgeMonthComplete,
-      'comeback' => l.badgeComeback,
-      'no_pause' => l.badgeNoPause,
-      'beat_record' => l.badgeBeatRecord,
-      'year' => switch (schedule.frequency) {
-        Frequency.daily || Frequency.fewTimesWeek => l.badgeYearReadings,
-        _ => l.badgeYearOf(l.weekdayPlural(weekdayKey(schedule.day))),
-      },
-      'honest' => l.badgeHonest,
-      'lynx' => l.badgeLynx,
-      'first_pdf' => l.badgeFirstPdf,
-      'notes' => l.badgeNotes,
-      'double' => l.badgeDouble,
-      'month_below' => l.badgeMonthBelow,
-      'trend_down' => l.badgeTrendDown,
-      'quarter_below' => l.badgeQuarterBelow,
-      _ => a.id,
-    };
+String achievementTitle(Achievement a, AppLocalizations l) => switch (a.id) {
+  'first_step' => l.badgeFirstStep,
+  'two_months' => l.badgeTwoMonths,
+  'three_months' => l.badgeThreeMonths,
+  'six_months' => l.badgeSixMonths,
+  'month_complete' => l.badgeMonthComplete,
+  'comeback' => l.badgeComeback,
+  'no_pause' => l.badgeNoPause,
+  'beat_record' => l.badgeBeatRecord,
+  'year' => l.badgeYear,
+  'honest' => l.badgeHonest,
+  'lynx' => l.badgeLynx,
+  'first_pdf' => l.badgeFirstPdf,
+  'notes' => l.badgeNotes,
+  'double' => l.badgeDouble,
+  'month_below' => l.badgeMonthBelow,
+  'trend_down' => l.badgeTrendDown,
+  'quarter_below' => l.badgeQuarterBelow,
+  _ => a.id,
+};
 
 /// Unlock date, progress such as "6 su 26", or a hint.
 String achievementDetail(
@@ -270,6 +241,10 @@ String achievementDetail(
           : l.trendDetail(
               '${signed(a.deltaSystolic!)}/${signed(a.deltaDiastolic!)}',
             );
+    case 'year':
+      return a.unlocked
+          ? when(a.unlockedAt!)
+          : l.monthsProgress(a.value.clamp(0, a.target).toInt(), a.target);
     case 'quarter_below':
       if (a.unlocked) return l.sinceDate(dates.dayMonthShort(a.unlockedAt!));
       if (a.unlocksOn != null) return l.unlocksOn(dates.dayMonth(a.unlocksOn!));

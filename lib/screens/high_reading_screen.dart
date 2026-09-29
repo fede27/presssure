@@ -25,7 +25,6 @@ class HighReadingScreen extends StatelessWidget {
     final m = outcome.measurement;
     final usual = outcome.usualAverage;
     final streak = state.tracker.currentStreak;
-    final schedule = state.schedule;
     final honest = outcome.newBadges.where((b) => b.id == 'honest').firstOrNull;
     final aboveUsual = usual != null && usual.isBelow(state.thresholds);
     final when = context.dates.relative(m.takenAt, state.now(), l);
@@ -45,7 +44,7 @@ class HighReadingScreen extends StatelessWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: Pill(
-                label: l.streakSafe(schedule.countOccasions(l, streak)),
+                label: l.streakSafe(l.inARow(streak)),
                 background: AppColors.primarySoft,
                 foreground: AppColors.primary,
                 icon: Icons.check_rounded,
@@ -162,7 +161,7 @@ class HighReadingScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l.badgeNamed(achievementTitle(honest, l, schedule)),
+                          l.badgeNamed(achievementTitle(honest, l)),
                           style: AppText.body(15, weight: FontWeight.w800),
                         ),
                         Text(

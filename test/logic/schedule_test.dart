@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:presssure/l10n/l10n.dart';
 import 'package:presssure/logic/schedule.dart';
+import 'package:presssure/models/measurement.dart';
 import 'package:presssure/models/settings.dart';
 
 import '../helpers.dart';
@@ -17,10 +18,7 @@ void main() {
       expect(s.dueOnOrBefore(DateTime(2026, 9, 30)), DateTime(2026, 9, 27));
       expect(s.nextDueAfter(DateTime(2026, 9, 27)), DateTime(2026, 10, 4));
       expect(s.describe(itL10n), 'ogni domenica');
-      expect(s.occasions(itL10n, 2), 'domeniche');
       expect(s.describe(enL10n), 'every Sunday');
-      expect(s.inARow(enL10n, 1), '1 Sunday in a row');
-      expect(s.inARow(itL10n, 5), '5 domeniche di fila');
     });
 
     test('daily is always due', () {
@@ -104,33 +102,32 @@ void main() {
       expect(t.bestStreak, 18);
     });
 
-    test(
-      'the monthly jolly forgives 9 August, 16 August breaks the streak',
-      () {
-        final t = HabitTracker(
-          schedule,
-          designReadings(includeToday: true),
-          designNow,
-        );
-        final aug9 = t.periods.firstWhere(
-          (p) => p.period.start == DateTime(2026, 8, 9),
-        );
-        final aug16 = t.periods.firstWhere(
-          (p) => p.period.start == DateTime(2026, 8, 16),
-        );
-        expect(aug9.status, PeriodStatus.jolly);
-        expect(aug16.status, PeriodStatus.missed);
-        expect(t.currentStreak, 6);
-        expect(t.bestStreak, 18);
-        expect(t.bestStreakPeriods!.first.start, DateTime(2026, 4, 5));
-        expect(t.bestStreakPeriods!.last.start, DateTime(2026, 8, 2));
-        expect(t.bestBeforeCurrentRun, 18);
-        expect(t.recordBeatenAt, isNull);
-        expect(t.doneCount, 24);
-        // September's jolly is still available.
-        expect(t.jollyAvailable, isTrue);
-      },
-    );
+    test('the jolly earned on 7 June forgives 9 August, 16 August breaks the streak', () {
+      final t = HabitTracker(
+        schedule,
+        designReadings(includeToday: true),
+        designNow,
+      );
+      final aug9 = t.periods.firstWhere(
+        (p) => p.period.start == DateTime(2026, 8, 9),
+      );
+      final aug16 = t.periods.firstWhere(
+        (p) => p.period.start == DateTime(2026, 8, 16),
+      );
+      expect(aug9.status, PeriodStatus.jolly);
+      expect(aug16.status, PeriodStatus.missed);
+      expect(t.currentStreak, 6);
+      expect(t.bestStreak, 18);
+      expect(t.bestStreakPeriods!.first.start, DateTime(2026, 4, 5));
+      expect(t.bestStreakPeriods!.last.start, DateTime(2026, 8, 2));
+      expect(t.bestBeforeCurrentRun, 18);
+      expect(t.recordBeatenAt, isNull);
+      expect(t.doneCount, 24);
+      // 26 periods gone by: the second jolly came with the 20th, the
+      // third is 4 periods away.
+      expect(t.jollies, 1);
+      expect(t.nextJollyIn, 4);
+    });
 
     test('no readings: empty tracker', () {
       final t = HabitTracker(schedule, const [], designNow);
@@ -143,7 +140,7 @@ void main() {
       final readings = [
         for (var i = 0; i < 3; i++)
           reading(DateTime(2026, 5, 3 + i * 7, 8), 120, 80),
-        // 24 and 31 May missed: the jolly covers only one per month.
+        // 24 and 31 May missed: no jolly earned yet after 3 periods.
         for (var i = 0; i < 4; i++)
           reading(DateTime(2026, 6, 7 + i * 7, 8), 120, 80),
       ];
@@ -152,5 +149,57 @@ void main() {
       expect(t.currentStreak, 4);
       expect(t.recordBeatenAt, DateTime(2026, 6, 28, 8));
     });
+  });
+
+  group('jollies', () {
+    final schedule = Schedule(
+      frequency: Frequency.weekly,
+      weekdays: {DateTime.sunday},
+    );
+
+    List<Measurement> sundays(
+      DateTime first,
+      int count, {
+      Set<int> skip = const {},
+    }) => [
+      for (var i = 0; i < count; i++)
+        if (!skip.contains(i))
+          reading(addDays(first, 7 * i).add(const Duration(hours: 8)), 120, 80),
+    ];
+
+    test('one every 10 periods, up to 3', () {
+      final first = DateTime(2026, 1, 4);
+      var t = HabitTracker(schedule, sundays(first, 9), DateTime(2026, 3, 2));
+      expect(t.jollies, 0);
+      expect(t.nextJollyIn, 1);
+
+      t = HabitTracker(schedule, sundays(first, 10), DateTime(2026, 3, 9));
+      expect(t.jollies, 1);
+      expect(t.nextJollyIn, 10);
+
+      t = HabitTracker(schedule, sundays(first, 35), DateTime(2026, 9, 1));
+      expect(t.jollies, HabitTracker.jollyMax);
+      expect(t.nextJollyIn, isNull);
+    });
+
+    test('a missed period spends one and keeps the streak', () {
+      final first = DateTime(2026, 1, 4);
+      // The 12th Sunday is missed, the 11 before and 3 after are measured.
+      final t = HabitTracker(
+        schedule,
+        sundays(first, 15, skip: {11}),
+        DateTime(2026, 4, 13),
+      );
+      expect(t.periods[11].status, PeriodStatus.jolly);
+      expect(t.jollies, 0);
+      expect(t.currentStreak, 14);
+    });
+  });
+
+  test('streak texts no longer name the weekday', () {
+    expect(itL10n.inARow(5), '5 di fila');
+    expect(enL10n.inARow(1), '1 in a row');
+    expect(itL10n.readingsInARow(6), '6 misure di fila');
+    expect(enL10n.readingsInARow(1), '1 reading in a row');
   });
 }

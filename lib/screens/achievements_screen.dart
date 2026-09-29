@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../l10n/l10n.dart';
 import '../logic/achievements.dart';
@@ -20,7 +21,6 @@ class AchievementsScreen extends StatelessWidget {
     final state = AppScope.of(context);
     final report = state.achievements;
     final tracker = state.tracker;
-    final schedule = state.schedule;
     final t = state.thresholds;
     final range = report.bestStreakPeriods;
 
@@ -31,10 +31,7 @@ class AchievementsScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              _Stat(
-                value: '${tracker.currentStreak}',
-                label: l.inARowStat(schedule.occasions(l, 2)),
-              ),
+              _Stat(value: '${tracker.currentStreak}', label: l.inARowStat),
               const SizedBox(width: 8),
               _Stat(value: '${tracker.bestStreak}', label: l.recordInARow),
               const SizedBox(width: 8),
@@ -61,17 +58,22 @@ class AchievementsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        tracker.jollyAvailable ? l.jollyAvailable : l.jollyUsed,
+                        l.jollyAvailable(tracker.jollies),
                         style: AppText.body(15, weight: FontWeight.w800),
                       ),
                       Text(
-                        l.jollyBody(schedule.jollyKind),
+                        l.jollyBody(
+                          HabitTracker.jollyEvery,
+                          HabitTracker.jollyMax,
+                        ),
                         style: AppText.body(
                           13,
                           height: 1.4,
                           color: AppColors.ink2,
                         ),
                       ),
+                      const SizedBox(height: 6),
+                      _JollyProgress(tracker: tracker),
                     ],
                   ),
                 ),
@@ -87,7 +89,6 @@ class AchievementsScreen extends StatelessWidget {
             _BadgeSection(
               title: title,
               badges: report.inGroup(group).toList(),
-              schedule: schedule,
               thresholds: t,
               now: state.now(),
               note: group == BadgeGroup.trend
@@ -107,7 +108,7 @@ class AchievementsScreen extends StatelessWidget {
                   value: report.bestStreak == 0
                       ? '–'
                       : [
-                          schedule.countOccasions(l, report.bestStreak),
+                          l.inARow(report.bestStreak),
                           if (range != null)
                             dates.monthRange(
                               range.first.start,
@@ -125,13 +126,59 @@ class AchievementsScreen extends StatelessWidget {
                 ),
                 const Divider(),
                 _RecordRow(
-                  label: l.completeMonths,
-                  value: l.progressOf(
-                    report.completeMonths,
-                    report.monthsTracked,
-                  ),
+                  label: l.onSchedule,
+                  value: report.dueSoFar == 0
+                      ? '–'
+                      : l.onScheduleValue(
+                          report.doneOnSchedule,
+                          report.dueSoFar,
+                          NumberFormat.percentPattern(dates.locale)
+                              .format(report.doneOnSchedule / report.dueSoFar),
+                        ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Periods to go before the next jolly.
+class _JollyProgress extends StatelessWidget {
+  const _JollyProgress({required this.tracker});
+
+  final HabitTracker tracker;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final next = tracker.nextJollyIn;
+    const every = HabitTracker.jollyEvery;
+    return Semantics(
+      label: next == null ? l.jollyFull : l.jollyNextSemantics(next),
+      excludeSemantics: true,
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: next == null ? 1 : (every - next) / every,
+                minHeight: 6,
+                color: AppColors.gold,
+                backgroundColor: AppColors.navBar,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            next == null ? l.jollyFull : l.jollyNext(next),
+            style: AppText.body(
+              12,
+              weight: FontWeight.w700,
+              color: AppColors.muted,
             ),
           ),
         ],
@@ -174,7 +221,6 @@ class _BadgeSection extends StatelessWidget {
   const _BadgeSection({
     required this.title,
     required this.badges,
-    required this.schedule,
     required this.thresholds,
     required this.now,
     this.note,
@@ -182,7 +228,6 @@ class _BadgeSection extends StatelessWidget {
 
   final String title;
   final List<Achievement> badges;
-  final Schedule schedule;
   final Thresholds thresholds;
   final DateTime now;
   final String? note;
@@ -211,7 +256,6 @@ class _BadgeSection extends StatelessWidget {
                       width: w,
                       child: _BadgeTile(
                         badge: b,
-                        schedule: schedule,
                         thresholds: thresholds,
                         now: now,
                       ),
@@ -229,13 +273,11 @@ class _BadgeSection extends StatelessWidget {
 class _BadgeTile extends StatelessWidget {
   const _BadgeTile({
     required this.badge,
-    required this.schedule,
     required this.thresholds,
     required this.now,
   });
 
   final Achievement badge;
-  final Schedule schedule;
   final Thresholds thresholds;
   final DateTime now;
 
@@ -243,7 +285,7 @@ class _BadgeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final b = badge;
-    final title = achievementTitle(b, l, schedule);
+    final title = achievementTitle(b, l);
     final detail = achievementDetail(b, l, context.dates, now, thresholds);
     return Semantics(
       label: l.badgeSemantics(

@@ -36,7 +36,10 @@ void main() {
         lines[1],
         '13/09/2026;08:20;126;81;69;Sinistro;Seduto;manuale;no;Dormito poco',
       );
-      expect(lines[2], '20/09/2026;08:05;126;82;66;Sinistro;Seduto;manuale;no;');
+      expect(
+        lines[2],
+        '20/09/2026;08:05;126;82;66;Sinistro;Seduto;manuale;no;',
+      );
     });
 
     test('US English: commas and month/day dates', () {
@@ -127,9 +130,7 @@ void main() {
   test('the PDF is generated in both languages', () async {
     final data = ReportData.build(
       measurements: designReadings(includeToday: true),
-      settings: onboardedSettings.copyWith(
-        profile: const ReportProfile(name: 'Mario Rossi', device: 'Omron M3'),
-      ),
+      settings: onboardedSettings,
       range: ReportRange.all,
       now: DateTime(2026, 9, 27, 9),
     );

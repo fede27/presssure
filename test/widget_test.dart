@@ -3,7 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:presssure/models/settings.dart';
 import 'package:presssure/screens/celebrate_screen.dart';
 import 'package:presssure/screens/entry_screen.dart';
+import 'package:presssure/screens/habit_screen.dart';
 import 'package:presssure/screens/high_reading_screen.dart';
+import 'package:presssure/screens/settings_screen.dart';
+import 'package:presssure/screens/welcome_screen.dart';
 import 'package:presssure/widgets/common.dart';
 
 import 'helpers.dart';
@@ -65,7 +68,7 @@ void main() {
     expect(find.text('Domenica 27 settembre'), findsOneWidget);
     expect(find.text('Oggi è il giorno della misura'), findsOneWidget);
     expect(
-      find.textContaining('5 domeniche di fila.', findRichText: true),
+      find.textContaining('5 di fila.', findRichText: true),
       findsOneWidget,
     );
     expect(
@@ -102,6 +105,7 @@ void main() {
       find.textContaining('Fascia «elevata» secondo ESC 2024'),
       findsOneWidget,
     );
+    expect(find.textContaining('misura precedente 126/82'), findsOneWidget);
     await tapAndSettle(tester, find.text('Salva misurazione'));
 
     expect(state.measurements.length, 24);
@@ -109,7 +113,8 @@ void main() {
     expect(find.byType(CelebrateScreen), findsOneWidget);
     expect(find.text('NUOVO BADGE'), findsOneWidget);
     expect(find.text('Sei mesi di diario!'), findsOneWidget);
-    expect(find.text('6 domeniche di fila'), findsOneWidget);
+    expect(find.text('6 misure di fila'), findsOneWidget);
+    expect(find.text('Hai un jolly se salti una misura.'), findsOneWidget);
     expect(find.text('124/77, la più bassa da aprile'), findsOneWidget);
 
     await tapAndSettle(tester, find.text('Fatto'));
@@ -130,7 +135,7 @@ void main() {
 
     expect(find.byType(HighReadingScreen), findsOneWidget);
     expect(find.text('Oggi è più alta del solito'), findsOneWidget);
-    expect(find.text('Serie salva · 6 domeniche'), findsOneWidget);
+    expect(find.text('Serie salva · 6 di fila'), findsOneWidget);
     expect(
       find.textContaining('Di solito sei intorno a 127/80'),
       findsOneWidget,
@@ -152,20 +157,20 @@ void main() {
     expect(state.measurements.length, 23);
   });
 
-  testWidgets('diary: months, skipped Sundays and filters', (tester) async {
+  testWidgets('diary: months, missed readings and filters', (tester) async {
     await pumpApp(tester, measurements: designReadings(includeToday: true));
 
     await tapAndSettle(tester, navItem('Diario'));
     expect(find.text('Settembre'), findsOneWidget);
     expect(find.text('4 misure · media 125/80'), findsOneWidget);
-    expect(find.text('2 domeniche senza misura'), findsOneWidget);
+    expect(find.text('2 misure saltate'), findsOneWidget);
     expect(find.text('“Dormito poco”'), findsOneWidget);
     expect(find.text('124/77'), findsOneWidget);
 
     await tapAndSettle(tester, find.text('Con note'));
     expect(find.text('124/77'), findsNothing);
     expect(find.text('126/81'), findsOneWidget);
-    expect(find.text('2 domeniche senza misura'), findsNothing);
+    expect(find.text('2 misure saltate'), findsNothing);
   });
 
   testWidgets('diary: edit and delete a reading', (tester) async {
@@ -192,12 +197,12 @@ void main() {
     expect(find.text('24 misure in 6 mesi'), findsOneWidget);
     expect(find.text('Trimestre a confronto'), findsOneWidget);
     expect(find.text('129/81'), findsOneWidget);
-    expect(find.text('24 domeniche su 26'), findsOneWidget);
-    expect(find.text('Oltre 135/85'), findsOneWidget);
+    expect(find.text('24 misure su 26 previste'), findsOneWidget);
+    expect(find.text('Sopra soglia (135/85)'), findsOneWidget);
 
+    // The thresholds are edited in the settings.
     await tapAndSettle(tester, find.text('Cambia soglie'));
-    expect(find.text('Soglie'), findsOneWidget);
-    await tapAndSettle(tester, find.text('Annulla'));
+    expect(find.text('Soglie delle fasce'), findsOneWidget);
   });
 
   testWidgets('share tab: preview numbers and placeholders', (tester) async {
@@ -205,28 +210,95 @@ void main() {
 
     await tapAndSettle(tester, navItem('Condividi'));
     expect(find.text('Esporta e condividi'), findsOneWidget);
-    expect(find.text('Non hai ancora condiviso il diario'), findsOneWidget);
+    expect(find.text('Non hai ancora esportato il diario'), findsOneWidget);
     expect(
       find.text('5 aprile 2026 – 27 settembre 2026 · 24 misure'),
       findsOneWidget,
     );
     expect(find.text('Scarica PDF'), findsOneWidget);
 
-    await tapAndSettle(tester, find.text('Link sicuro o QR'));
-    expect(find.text('Link sicuro e QR: in arrivo.'), findsOneWidget);
+    expect(find.text('Link sicuro o QR'), findsNothing);
+    expect(find.text('Esporta i dati in CSV (per Excel)'), findsOneWidget);
   });
 
   testWidgets('achievements from the home card', (tester) async {
     await pumpApp(tester, measurements: designReadings(includeToday: true));
 
     await tapAndSettle(tester, find.text('Traguardi'));
-    expect(find.text('Jolly del mese: 1 disponibile'), findsOneWidget);
+    expect(find.text('Jolly: 1 disponibile'), findsOneWidget);
+    expect(find.text('prossimo tra 4'), findsOneWidget);
     expect(find.text('Costanza'), findsOneWidget);
     expect(find.text('Sei mesi di diario'), findsOneWidget);
     expect(find.text('NUOVO'), findsWidgets);
     expect(find.text('×5'), findsOneWidget);
-    expect(find.text('18 domeniche · apr – ago'), findsOneWidget);
-    expect(find.text('5 su 6'), findsOneWidget);
+    expect(find.text('18 di fila · apr – ago'), findsOneWidget);
+    expect(find.text('24 su 26 · 92%'), findsOneWidget);
+    expect(find.text('6 mesi su 12'), findsOneWidget);
+  });
+
+  group('settings', () {
+    testWidgets('open from the home, with the habit and the thresholds', (
+      tester,
+    ) async {
+      await pumpApp(tester, measurements: designReadings());
+
+      await tapAndSettle(tester, find.byTooltip('Impostazioni'));
+      expect(find.byType(SettingsScreen), findsOneWidget);
+      expect(find.text('Ogni domenica · 08:00'), findsOneWidget);
+      expect(find.text('Nessun backup finora'), findsOneWidget);
+      expect(find.text('Versione'), findsOneWidget);
+
+      await tapAndSettle(tester, find.text('Abitudine e promemoria'));
+      expect(find.byType(HabitScreen), findsOneWidget);
+      await tapAndSettle(tester, find.byTooltip('Indietro'));
+      expect(find.byType(SettingsScreen), findsOneWidget);
+    });
+
+    testWidgets('thresholds are saved when valid, reset to ESC 2024', (
+      tester,
+    ) async {
+      final state = await pumpApp(tester, measurements: designReadings());
+      await tapAndSettle(tester, find.byTooltip('Impostazioni'));
+
+      Finder field(String label) => find.bySemanticsLabel(label);
+      final semantics = tester.ensureSemantics();
+      await tester.enterText(field('Sopra soglia da, sistolica'), '140');
+      await tester.pump();
+      expect(state.thresholds.highSystolic, 140);
+      expect(state.thresholds.isEsc2024, isFalse);
+
+      // Elevated not below the threshold: shown, not saved.
+      await tester.enterText(field('Elevata da, sistolica'), '145');
+      await tester.pump();
+      expect(
+        find.text('La fascia elevata deve stare sotto la soglia.'),
+        findsOneWidget,
+      );
+      expect(state.thresholds.elevatedSystolic, 120);
+
+      await tapAndSettle(tester, find.text('Ripristina ESC 2024'));
+      expect(state.thresholds.isEsc2024, isTrue);
+      expect(
+        find.text('La fascia elevata deve stare sotto la soglia.'),
+        findsNothing,
+      );
+      semantics.dispose();
+    });
+
+    testWidgets('delete all data goes back to the welcome', (tester) async {
+      final state = await pumpApp(tester, measurements: designReadings());
+      await tapAndSettle(tester, find.byTooltip('Impostazioni'));
+
+      await tapAndSettle(tester, find.text('Cancella tutti i dati'));
+      await tapAndSettle(tester, find.text('Annulla'));
+      expect(state.measurements, hasLength(23));
+
+      await tapAndSettle(tester, find.text('Cancella tutti i dati'));
+      await tapAndSettle(tester, find.text('Cancella tutto'));
+      expect(state.measurements, isEmpty);
+      expect(state.settings.onboarded, isFalse);
+      expect(find.byType(WelcomeScreen), findsOneWidget);
+    });
   });
 
   group('localization', () {
@@ -245,7 +317,7 @@ void main() {
       expect(find.text('Sunday, September 27'), findsOneWidget);
       expect(find.text('Today is measuring day'), findsOneWidget);
       expect(
-        find.textContaining('5 Sundays in a row.', findRichText: true),
+        find.textContaining('5 in a row.', findRichText: true),
         findsOneWidget,
       );
       expect(find.text('Last reading · Sunday, September 20'), findsOneWidget);

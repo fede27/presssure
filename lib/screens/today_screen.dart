@@ -11,8 +11,8 @@ import '../widgets/bp_chart.dart';
 import '../widgets/common.dart';
 import 'achievements_screen.dart';
 import 'flows.dart';
-import 'habit_screen.dart';
 import 'home_shell.dart';
+import 'settings_screen.dart';
 
 /// "01 · Oggi".
 class TodayScreen extends StatelessWidget {
@@ -83,7 +83,7 @@ class _Header extends StatelessWidget {
             ),
           ),
           Tooltip(
-            message: l.habitAndReminders,
+            message: l.settingsTitle,
             child: Material(
               color: AppColors.surface,
               shape: const CircleBorder(
@@ -91,13 +91,11 @@ class _Header extends StatelessWidget {
               ),
               child: InkWell(
                 customBorder: const CircleBorder(),
-                onTap: () => Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const HabitScreen())),
+                onTap: () => openSettings(context),
                 child: const SizedBox(
                   width: 48,
                   height: 48,
-                  child: Icon(Icons.notifications_none_rounded, size: 22),
+                  child: Icon(Icons.settings_outlined, size: 22),
                 ),
               ),
             ),
@@ -205,7 +203,7 @@ class _HabitCard extends StatelessWidget {
                     children: [
                       if (streak > 0)
                         TextSpan(
-                          text: '${schedule.inARow(l, streak)}.',
+                          text: '${l.inARow(streak)}.',
                           style: AppText.body(
                             13,
                             weight: FontWeight.w800,

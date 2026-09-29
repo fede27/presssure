@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
 import '../logic/bp_category.dart';
@@ -12,6 +11,7 @@ import '../theme.dart';
 import '../widgets/bp_chart.dart';
 import '../widgets/common.dart';
 import 'home_shell.dart';
+import 'settings_screen.dart';
 import 'today_screen.dart';
 
 enum TrendRange { threeMonths, sixMonths, year, all }
@@ -337,7 +337,6 @@ class _RegularityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final periods = tracker.last(26);
-    final schedule = tracker.schedule;
     final done = periods.where((p) => p.status == PeriodStatus.done).length;
     final elapsed = periods
         .where((p) => p.status != PeriodStatus.pending)
@@ -358,7 +357,7 @@ class _RegularityCard extends StatelessWidget {
                 ),
               ),
               Text(
-                l.regularityCount(done, schedule.occasions(l, done), elapsed),
+                l.regularityCount(done, elapsed),
                 style: AppText.body(
                   13,
                   weight: FontWeight.w700,
@@ -396,7 +395,7 @@ class _RegularityCard extends StatelessWidget {
               ),
               Expanded(
                 child: Text(
-                  streak > 0 ? schedule.inARow(l, streak) : '',
+                  streak > 0 ? l.inARow(streak) : '',
                   textAlign: TextAlign.center,
                   style: AppText.body(
                     12,
@@ -563,7 +562,7 @@ class _BandsCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               OutlinedButton(
-                onPressed: () => showThresholdsDialog(context),
+                onPressed: () => openSettings(context),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(44, 44),
                   foregroundColor: AppColors.primary,
@@ -582,164 +581,6 @@ class _BandsCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-Future<void> showThresholdsDialog(BuildContext context) async {
-  final state = AppScope.read(context);
-  final result = await showDialog<Thresholds>(
-    context: context,
-    builder: (_) => _ThresholdsDialog(initial: state.thresholds),
-  );
-  if (result != null) {
-    await state.updateSettings(state.settings.copyWith(thresholds: result));
-  }
-}
-
-class _ThresholdsDialog extends StatefulWidget {
-  const _ThresholdsDialog({required this.initial});
-
-  final Thresholds initial;
-
-  @override
-  State<_ThresholdsDialog> createState() => _ThresholdsDialogState();
-}
-
-class _ThresholdsDialogState extends State<_ThresholdsDialog> {
-  late final _highSys = TextEditingController(
-    text: '${widget.initial.highSystolic}',
-  );
-  late final _highDia = TextEditingController(
-    text: '${widget.initial.highDiastolic}',
-  );
-  late final _elevSys = TextEditingController(
-    text: '${widget.initial.elevatedSystolic}',
-  );
-  late final _elevDia = TextEditingController(
-    text: '${widget.initial.elevatedDiastolic}',
-  );
-  String? _error;
-
-  @override
-  void dispose() {
-    for (final c in [_highSys, _highDia, _elevSys, _elevDia]) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
-  void _reset() {
-    const e = Thresholds.esc2024;
-    setState(() {
-      _highSys.text = '${e.highSystolic}';
-      _highDia.text = '${e.highDiastolic}';
-      _elevSys.text = '${e.elevatedSystolic}';
-      _elevDia.text = '${e.elevatedDiastolic}';
-      _error = null;
-    });
-  }
-
-  void _save() {
-    final l = context.l10n;
-    final values = [
-      _highSys,
-      _highDia,
-      _elevSys,
-      _elevDia,
-    ].map((c) => int.tryParse(c.text)).toList();
-    if (values.any((v) => v == null || v < 40 || v > 250)) {
-      setState(() => _error = l.thresholdsErrRange);
-      return;
-    }
-    final t = Thresholds(
-      highSystolic: values[0]!,
-      highDiastolic: values[1]!,
-      elevatedSystolic: values[2]!,
-      elevatedDiastolic: values[3]!,
-    );
-    if (t.elevatedSystolic >= t.highSystolic ||
-        t.elevatedDiastolic >= t.highDiastolic) {
-      setState(() => _error = l.thresholdsErrOrder);
-      return;
-    }
-    Navigator.pop(context, t);
-  }
-
-  Widget _field(String label, TextEditingController c) => Expanded(
-    child: TextField(
-      controller: c,
-      keyboardType: TextInputType.number,
-      inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly,
-        LengthLimitingTextInputFormatter(3),
-      ],
-      decoration: InputDecoration(labelText: label),
-    ),
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    return AlertDialog(
-      title: Text(l.thresholdsTitle),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l.thresholdHigh,
-              style: AppText.body(13, weight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _field(l.systolic, _highSys),
-                const SizedBox(width: 10),
-                _field(l.diastolic, _highDia),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Text(
-              l.thresholdElevated,
-              style: AppText.body(13, weight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _field(l.systolic, _elevSys),
-                const SizedBox(width: 10),
-                _field(l.diastolic, _elevDia),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              l.thresholdsDoctorNote,
-              style: AppText.body(12, color: AppColors.muted),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                _error!,
-                style: AppText.body(
-                  13,
-                  weight: FontWeight.w700,
-                  color: AppColors.high,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: _reset, child: Text(l.esc2024)),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l.cancel),
-        ),
-        TextButton(onPressed: _save, child: Text(l.save)),
-      ],
     );
   }
 }

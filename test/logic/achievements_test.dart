@@ -24,8 +24,6 @@ AchievementsReport compute(
 }
 
 void main() {
-  final schedule = Schedule.fromSettings(onboardedSettings);
-
   group('on the design data (after saving 27 September)', () {
     final report = compute(designReadings(includeToday: true));
 
@@ -56,10 +54,10 @@ void main() {
       expect(it('comeback'), '23 ago, dopo la pausa');
       expect(it('no_pause'), '6 su 26');
       expect(it('beat_record'), '6 su 19');
-      expect(it('year'), '24 su 52');
+      expect(it('year'), '6 mesi su 12');
       expect(
-        achievementTitle(report.byId('year'), itL10n, schedule),
-        'Un anno di domeniche',
+        achievementTitle(report.byId('year'), itL10n),
+        'Un anno di diario',
       );
     });
 
@@ -85,16 +83,14 @@ void main() {
       expect(en('month_complete'), 'September, 4 of 4');
       expect(en('comeback'), 'Aug 23, after the break');
       expect(en('beat_record'), '6 of 19');
+      expect(en('year'), '6 of 12 months');
       expect(en('trend_down'), '−12/−9 between quarters');
       expect(en('quarter_below'), 'unlocks on September 30');
       expect(
-        achievementTitle(report.byId('year'), enL10n, schedule),
-        'A year of Sundays',
+        achievementTitle(report.byId('year'), enL10n),
+        'A year of tracking',
       );
-      expect(
-        achievementTitle(report.byId('comeback'), enL10n, schedule),
-        'Fresh start',
-      );
+      expect(achievementTitle(report.byId('comeback'), enL10n), 'Fresh start');
     });
 
     test('records', () {
@@ -102,8 +98,8 @@ void main() {
       expect(report.bestStreakPeriods!.first.start, DateTime(2026, 4, 5));
       expect(report.bestStreakPeriods!.last.start, DateTime(2026, 8, 2));
       expect(report.lowestMonth!.month, 9);
-      expect(report.completeMonths, 5);
-      expect(report.monthsTracked, 6);
+      expect(report.doneOnSchedule, 24);
+      expect(report.dueSoFar, 26);
     });
 
     test('new badges are the ones unlocked in the last days', () {

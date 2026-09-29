@@ -65,6 +65,13 @@ class WelcomeScreen extends StatelessWidget {
                       foreground: AppColors.diastolic,
                       text: l.welcomeFeatureExport,
                     ),
+                    const SizedBox(height: 14),
+                    _Feature(
+                      icon: Icons.smartphone_rounded,
+                      background: AppColors.greenSoft,
+                      foreground: AppColors.green,
+                      text: l.welcomeFeatureLocal,
+                    ),
                     const Spacer(),
                     const SizedBox(height: 22),
                     AppCard(

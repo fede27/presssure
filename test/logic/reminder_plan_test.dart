@@ -127,4 +127,68 @@ void main() {
     expect(summary.title, 'Your September');
     expect(summary.body, 'September: 4 readings, average 125/80.');
   });
+
+  group('backup reminder', () {
+    PlannedReminder? backup(List<PlannedReminder> plan) =>
+        plan.where((r) => r.id == backupIdBase).firstOrNull;
+
+    test('a month after the last backup, at the reminder time', () {
+      final plan = makePlan(
+        settings: weekly.copyWith(lastBackup: DateTime(2026, 9, 1, 21)),
+        measurements: designReadings(),
+        now: DateTime(2026, 9, 26, 10),
+      );
+      final r = backup(plan)!;
+      expect(r.at, DateTime(2026, 10, 1, 8));
+      expect(r.title, 'È ora di un backup');
+    });
+
+    test('overdue: the next day; never saved: a month after the start', () {
+      final overdue = makePlan(
+        settings: weekly.copyWith(lastBackup: DateTime(2026, 7, 1)),
+        measurements: designReadings(),
+        now: DateTime(2026, 9, 26, 10),
+      );
+      expect(backup(overdue)!.at, DateTime(2026, 9, 27, 8));
+
+      final never = makePlan(
+        settings: weekly,
+        measurements: [reading(DateTime(2026, 9, 6, 8), 120, 80)],
+        now: DateTime(2026, 9, 26, 10),
+      );
+      expect(backup(never)!.at, DateTime(2026, 10, 6, 8));
+    });
+
+    test('not when switched off or with an empty diary', () {
+      expect(
+        backup(
+          makePlan(
+            settings: weekly.copyWith(backupReminder: false),
+            measurements: designReadings(),
+            now: DateTime(2026, 9, 26, 10),
+          ),
+        ),
+        isNull,
+      );
+      expect(
+        backup(
+          makePlan(
+            settings: weekly,
+            measurements: const [],
+            now: DateTime(2026, 9, 26, 10),
+          ),
+        ),
+        isNull,
+      );
+    });
+  });
+
+  test('nothing is planned before the habit is set', () {
+    final plan = makePlan(
+      settings: const AppSettings(),
+      measurements: designReadings(),
+      now: DateTime(2026, 9, 26, 10),
+    );
+    expect(plan, isEmpty);
+  });
 }

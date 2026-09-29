@@ -65,7 +65,6 @@ class _DiaryScreenState extends State<DiaryScreen> {
     final months = groupByMonth(filtered);
     final showGaps = _filter == _Filter.all && _query.text.trim().isEmpty;
     final gaps = showGaps ? _gapGroups(state.tracker) : <_Gap>[];
-    final t = state.thresholds;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -144,7 +143,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
                   for (final (f, label) in [
                     (_Filter.all, l.filterAll),
                     (_Filter.notes, l.filterNotes),
-                    (_Filter.high, l.bandHigh(t.highSystolic, t.highDiastolic)),
+                    (_Filter.high, l.aboveThreshold),
                   ]) ...[
                     ChoicePill(
                       label: label,
@@ -225,8 +224,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     final rows = <(DateTime, Widget)>[
       for (final m in g.items)
         (m.takenAt, _EntryCard(measurement: m, category: state.categoryOf(m))),
-      for (final gap in monthGaps)
-        (gap.last, _GapRow(gap: gap, schedule: state.schedule)),
+      for (final gap in monthGaps) (gap.last, _GapRow(gap: gap)),
     ]..sort((a, b) => b.$1.compareTo(a.$1));
 
     return Padding(
@@ -403,10 +401,9 @@ class _EntryCard extends StatelessWidget {
 }
 
 class _GapRow extends StatelessWidget {
-  const _GapRow({required this.gap, required this.schedule});
+  const _GapRow({required this.gap});
 
   final _Gap gap;
-  final Schedule schedule;
 
   @override
   Widget build(BuildContext context) {
@@ -429,7 +426,7 @@ class _GapRow extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                l.gapLabel(n, schedule.occasions(l, n)),
+                l.gapLabel(n),
                 style: AppText.body(14, color: AppColors.muted),
               ),
             ),

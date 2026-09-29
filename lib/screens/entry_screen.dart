@@ -725,7 +725,9 @@ class _CategoryHint extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              previous == null ? hint : '$hint · ${l.previousValue(previous!)}',
+              previous == null
+                  ? hint
+                  : '$hint · ${l.previousReading(previous!)}',
               style: AppText.body(
                 13,
                 weight: FontWeight.w700,

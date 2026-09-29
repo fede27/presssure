@@ -22,12 +22,11 @@ class CelebrateScreen extends StatelessWidget {
     final dates = context.dates;
     final state = AppScope.of(context);
     final tracker = state.tracker;
-    final schedule = state.schedule;
     final m = outcome.measurement;
     final value = '${m.systolic}/${m.diastolic}';
     final badge = outcome.newBadges.firstOrNull;
     final streak = tracker.currentStreak;
-    final streakLabel = schedule.inARow(l, streak);
+    final streakLabel = l.readingsInARow(streak);
     final all = state.measurements;
     final lowest =
         all.length >= 3 &&
@@ -66,9 +65,7 @@ class CelebrateScreen extends StatelessWidget {
                     header: true,
                     child: Text(
                       badge != null
-                          ? l.celebrateTitleBadge(
-                              achievementTitle(badge, l, schedule),
-                            )
+                          ? l.celebrateTitleBadge(achievementTitle(badge, l))
                           : l.celebrateTitleStreak(streakLabel),
                       textAlign: TextAlign.center,
                       style: AppText.display(
@@ -113,9 +110,7 @@ class CelebrateScreen extends StatelessWidget {
                           background: AppColors.orangeSoft,
                           foreground: AppColors.systolicDark,
                           title: streakLabel,
-                          subtitle: tracker.jollyAvailable
-                              ? l.jollyAvailableLine
-                              : l.jollyUsedLine,
+                          subtitle: l.jollyLine(tracker.jollies),
                         ),
                         const SizedBox(height: 10),
                         _StreakBar(current: streak, record: record),
@@ -151,9 +146,7 @@ class CelebrateScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  l.almostBadge(
-                                    achievementTitle(closest, l, schedule),
-                                  ),
+                                  l.almostBadge(achievementTitle(closest, l)),
                                   style: AppText.body(
                                     16,
                                     weight: FontWeight.w800,
@@ -215,7 +208,7 @@ class CelebrateScreen extends StatelessWidget {
     );
   }
 
-  /// "Dal 5 aprile 24 misure su 26 domeniche."
+  /// "Dal 5 aprile 24 misure su 26 previste."
   String _badgeLine(
     AppState state,
     AppLocalizations l,
@@ -230,7 +223,6 @@ class CelebrateScreen extends StatelessWidget {
           dates.dayMonth(first),
           l.readingsCount(done),
           total,
-          state.schedule.occasions(l, total),
         ) +
         more;
   }

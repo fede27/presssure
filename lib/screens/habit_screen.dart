@@ -257,9 +257,7 @@ class _HabitScreenState extends State<HabitScreen> {
                     onChanged: (v) => setState(() => _remindNextDay = v),
                     title: Text(l.habitRemindNextDay, style: AppText.body(15)),
                     subtitle: Text(
-                      _frequency == Frequency.monthly
-                          ? l.habitRemindNextDayHintMonthly
-                          : l.habitRemindNextDayHint,
+                      l.habitRemindNextDayHint,
                       style: AppText.body(
                         13,
                         weight: FontWeight.w500,

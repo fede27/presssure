@@ -1,3 +1,5 @@
+import 'json.dart';
+
 /// Arm used for the reading.
 enum Arm { left, right }
 
@@ -82,13 +84,13 @@ class Measurement {
       systolic: json['sys'] as int,
       diastolic: json['dia'] as int,
       pulse: json['pulse'] as int?,
-      arm: Arm.values.byName(json['arm'] as String? ?? Arm.left.name),
-      posture: Posture.values.byName(
-        json['posture'] as String? ?? Posture.sitting.name,
-      ),
+      arm: enumByName(Arm.values, json['arm'], Arm.left),
+      posture: enumByName(Posture.values, json['posture'], Posture.sitting),
       note: json['note'] as String? ?? '',
-      source: ReadingSource.values.byName(
-        json['source'] as String? ?? ReadingSource.manual.name,
+      source: enumByName(
+        ReadingSource.values,
+        json['source'],
+        ReadingSource.manual,
       ),
       doubleReading: json['double'] as bool? ?? false,
     );

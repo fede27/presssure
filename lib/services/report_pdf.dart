@@ -54,9 +54,7 @@ Future<Uint8List> buildReportPdf(
 ) {
   final doc = pw.Document(
     title: l.reportTitle,
-    author: data.settings.profile.name.isEmpty
-        ? l.appTitle
-        : data.settings.profile.name,
+    author: l.appTitle,
     creator: l.appTitle,
   );
   final t = data.thresholds;
@@ -95,8 +93,6 @@ Future<Uint8List> buildReportPdf(
       ),
       build: (context) => [
         _header(data, l, dates),
-        pw.SizedBox(height: 12),
-        _profile(data, l),
         pw.SizedBox(height: 12),
         _summary(data, l, dates),
         if (options.chart && data.items.length >= 2) ...[
@@ -152,33 +148,6 @@ pw.Widget _header(ReportData data, AppLocalizations l, Dates dates) {
         ),
       ),
     ],
-  );
-}
-
-pw.Widget _profile(ReportData data, AppLocalizations l) {
-  final p = data.settings.profile;
-  pw.Widget field(String label, String value) => pw.Expanded(
-    child: pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        _t(label, size: 7, color: _muted),
-        pw.SizedBox(height: 2),
-        _t(value.trim().isEmpty ? '-' : value, size: 10, bold: true),
-      ],
-    ),
-  );
-  return pw.Container(
-    padding: const pw.EdgeInsets.symmetric(vertical: 8),
-    decoration: const pw.BoxDecoration(
-      border: pw.Border.symmetric(horizontal: pw.BorderSide(color: _line)),
-    ),
-    child: pw.Row(
-      children: [
-        field(l.patient, p.name),
-        field(l.birthField, p.birthDate),
-        field(l.deviceField, p.device),
-      ],
-    ),
   );
 }
 
@@ -399,7 +368,8 @@ pw.Widget _notes(ReportData data, AppLocalizations l, Dates dates) {
             children: [
               pw.SizedBox(
                 width: 90,
-                child: _t(dates.dayMonth(m.takenAt), bold: true),
+                // The asterisk matches the one in the table and the footer.
+                child: _t('${dates.dayMonth(m.takenAt)} *', bold: true),
               ),
               pw.Expanded(child: _t('"${m.note.trim()}"')),
             ],

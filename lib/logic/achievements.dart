@@ -67,8 +67,8 @@ class AchievementsReport {
     required this.bestStreak,
     required this.bestStreakPeriods,
     required this.lowestMonth,
-    required this.completeMonths,
-    required this.monthsTracked,
+    required this.doneOnSchedule,
+    required this.dueSoFar,
   });
 
   final List<Achievement> badges;
@@ -77,8 +77,10 @@ class AchievementsReport {
   /// First and last period of the best streak.
   final List<Period>? bestStreakPeriods;
   final MonthGroup? lowestMonth;
-  final int completeMonths;
-  final int monthsTracked;
+
+  /// Periods measured and periods gone by: "24 su 26".
+  final int doneOnSchedule;
+  final int dueSoFar;
 
   Iterable<Achievement> inGroup(BadgeGroup g) =>
       badges.where((b) => b.group == g);
@@ -268,19 +270,25 @@ AchievementsReport computeAchievements({
     ),
   );
 
-  final year = schedule.periodsFor(364);
-  final done = tracker.periods
-      .where((p) => p.status == PeriodStatus.done)
-      .toList();
+  // Twelve months with at least one reading; the first reading of each
+  // month marks it.
+  final diaryMonths = <DateTime>[];
+  for (final m in sorted) {
+    final month = DateTime(m.takenAt.year, m.takenAt.month);
+    if (diaryMonths.isEmpty || diaryMonths.last != month) {
+      diaryMonths.add(month);
+    }
+  }
+  DateTime? firstIn(DateTime month) => sorted
+      .firstWhere((m) => DateTime(m.takenAt.year, m.takenAt.month) == month)
+      .takenAt;
   badges.add(
     _progressBadge(
       id: 'year',
       group: BadgeGroup.consistency,
-      value: done.length,
-      target: year,
-      unlockedAt: done.length >= year
-          ? done[year - 1].measurements.first.takenAt
-          : null,
+      value: diaryMonths.length,
+      target: 12,
+      unlockedAt: diaryMonths.length >= 12 ? firstIn(diaryMonths[11]) : null,
     ),
   );
 
@@ -420,12 +428,7 @@ AchievementsReport computeAchievements({
     bestStreak: tracker.bestStreak,
     bestStreakPeriods: tracker.bestStreakPeriods,
     lowestMonth: lowest,
-    completeMonths: complete.length,
-    monthsTracked: _monthsTouched(tracker),
+    doneOnSchedule: tracker.doneCount,
+    dueSoFar: tracker.elapsed.length,
   );
 }
-
-int _monthsTouched(HabitTracker t) => t.periods
-    .map((p) => p.period.start.year * 12 + p.period.start.month)
-    .toSet()
-    .length;

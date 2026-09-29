@@ -36,7 +36,7 @@ void main() {
   });
 
   test('labels in Italian and English follow the thresholds', () {
-    expect(BpCategory.high.rangeLabel(itL10n, esc), 'Oltre 135/85');
+    expect(BpCategory.high.rangeLabel(itL10n, esc), 'Sopra soglia (135/85)');
     expect(
       BpCategory.elevated.rangeLabel(itL10n, esc),
       'Elevata (120–134 / 70–84)',
@@ -45,7 +45,7 @@ void main() {
       BpCategory.nonElevated.rangeLabel(itL10n, esc),
       'Non elevata (sotto 120/70)',
     );
-    expect(BpCategory.high.rangeLabel(enL10n, esc), 'Above 135/85');
+    expect(BpCategory.high.rangeLabel(enL10n, esc), 'Above threshold (135/85)');
     expect(BpCategory.elevated.label(enL10n), 'Elevated');
     expect(BpCategory.elevated.label(itL10n), 'Elevata');
   });

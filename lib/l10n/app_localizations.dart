@@ -194,12 +194,6 @@ abstract class AppLocalizations {
   /// **'{day, select, mon{Monday} tue{Tuesday} wed{Wednesday} thu{Thursday} fri{Friday} sat{Saturday} sun{Sunday} other{day}}'**
   String weekdayName(String day);
 
-  /// Plural of the weekday, as in '5 Sundays in a row'.
-  ///
-  /// In en, this message translates to:
-  /// **'{day, select, mon{Mondays} tue{Tuesdays} wed{Wednesdays} thu{Thursdays} fri{Fridays} sat{Saturdays} sun{Sundays} other{days}}'**
-  String weekdayPlural(String day);
-
   /// Weekday in a list of chosen days: 'Mondays and Thursdays'.
   ///
   /// In en, this message translates to:
@@ -211,12 +205,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{day, select, mon{on Mondays} tue{on Tuesdays} wed{on Wednesdays} thu{on Thursdays} fri{on Fridays} sat{on Saturdays} sun{on Sundays} other{}}'**
   String onWeekday(String day);
-
-  /// No description provided for @nounDays.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{day} other{days}}'**
-  String nounDays(int count);
 
   /// No description provided for @nounReadings.
   ///
@@ -230,17 +218,17 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 reading} other{{count} readings}}'**
   String readingsCount(int count);
 
-  /// No description provided for @countNoun.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} {noun}'**
-  String countNoun(int count, String noun);
-
   /// No description provided for @inARow.
   ///
   /// In en, this message translates to:
-  /// **'{count} {noun} in a row'**
-  String inARow(int count, String noun);
+  /// **'{count} in a row'**
+  String inARow(int count);
+
+  /// No description provided for @readingsInARow.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 reading in a row} other{{count} readings in a row}}'**
+  String readingsInARow(int count);
 
   /// No description provided for @progressOf.
   ///
@@ -365,8 +353,14 @@ abstract class AppLocalizations {
   /// No description provided for @bandHigh.
   ///
   /// In en, this message translates to:
-  /// **'Above {sys}/{dia}'**
+  /// **'Above threshold ({sys}/{dia})'**
   String bandHigh(int sys, int dia);
+
+  /// No description provided for @aboveThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Above threshold'**
+  String get aboveThreshold;
 
   /// No description provided for @welcomeTitle.
   ///
@@ -391,6 +385,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Export to PDF or CSV whenever you need'**
   String get welcomeFeatureExport;
+
+  /// No description provided for @welcomeFeatureLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data stays on your phone: no account, no server'**
+  String get welcomeFeatureLocal;
 
   /// No description provided for @welcomeNoticeTitle.
   ///
@@ -437,7 +437,7 @@ abstract class AppLocalizations {
   /// No description provided for @frequencyFewTimesWeek.
   ///
   /// In en, this message translates to:
-  /// **'A few times a week'**
+  /// **'On several days a week'**
   String get frequencyFewTimesWeek;
 
   /// No description provided for @frequencyWeekly.
@@ -491,14 +491,8 @@ abstract class AppLocalizations {
   /// No description provided for @habitRemindNextDayHint.
   ///
   /// In en, this message translates to:
-  /// **'Just once, then wait for the next reading'**
+  /// **'Just once, then wait for the next planned reading'**
   String get habitRemindNextDayHint;
-
-  /// No description provided for @habitRemindNextDayHintMonthly.
-  ///
-  /// In en, this message translates to:
-  /// **'Just once, then wait for next month'**
-  String get habitRemindNextDayHintMonthly;
 
   /// No description provided for @habitMonthlySummary.
   ///
@@ -593,13 +587,13 @@ abstract class AppLocalizations {
   /// No description provided for @habitAndReminders.
   ///
   /// In en, this message translates to:
-  /// **'Reminders and habit'**
+  /// **'Habit and reminders'**
   String get habitAndReminders;
 
   /// No description provided for @periodDotsLabel.
   ///
   /// In en, this message translates to:
-  /// **'Last {total} times: {done} measured, {missed} skipped'**
+  /// **'Last {total} planned readings: {done} done, {missed} missed'**
   String periodDotsLabel(int total, int done, int missed);
 
   /// No description provided for @lastReadingOn.
@@ -625,6 +619,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'the time before {value}'**
   String previousValue(String value);
+
+  /// No description provided for @previousReading.
+  ///
+  /// In en, this message translates to:
+  /// **'previous reading {value}'**
+  String previousReading(String value);
 
   /// No description provided for @bandByEsc.
   ///
@@ -665,7 +665,7 @@ abstract class AppLocalizations {
   /// No description provided for @legendSkipped.
   ///
   /// In en, this message translates to:
-  /// **'Skipped'**
+  /// **'Missed readings'**
   String get legendSkipped;
 
   /// No description provided for @trendEmpty.
@@ -989,13 +989,8 @@ abstract class AppLocalizations {
   /// No description provided for @celebrateSince.
   ///
   /// In en, this message translates to:
-  /// **'Since {date}: {readings} out of {total} {occasions}.'**
-  String celebrateSince(
-    String date,
-    String readings,
-    int total,
-    String occasions,
-  );
+  /// **'Since {date}: {readings} out of {total} planned.'**
+  String celebrateSince(String date, String readings, int total);
 
   /// No description provided for @andMoreBadges.
   ///
@@ -1003,17 +998,11 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{ And 1 more badge.} other{ And {count} more badges.}}'**
   String andMoreBadges(int count);
 
-  /// No description provided for @jollyAvailableLine.
+  /// No description provided for @jollyLine.
   ///
   /// In en, this message translates to:
-  /// **'This month\'s joker is still available.'**
-  String get jollyAvailableLine;
-
-  /// No description provided for @jollyUsedLine.
-  ///
-  /// In en, this message translates to:
-  /// **'This month\'s joker is used: don\'t skip the next one.'**
-  String get jollyUsedLine;
+  /// **'{count, plural, =0{No jokers left: don\'t skip the next one.} =1{You have a joker if you skip a reading.} other{You have {count} jokers if you skip a reading.}}'**
+  String jollyLine(int count);
 
   /// No description provided for @lowestSince.
   ///
@@ -1198,8 +1187,8 @@ abstract class AppLocalizations {
   /// No description provided for @gapLabel.
   ///
   /// In en, this message translates to:
-  /// **'{count} {noun} without a reading'**
-  String gapLabel(int count, String noun);
+  /// **'{count, plural, =1{1 missed reading} other{{count} missed readings}}'**
+  String gapLabel(int count);
 
   /// No description provided for @newReading.
   ///
@@ -1318,8 +1307,8 @@ abstract class AppLocalizations {
   /// No description provided for @regularityCount.
   ///
   /// In en, this message translates to:
-  /// **'{done} {noun} of {total}'**
-  String regularityCount(int done, String noun, int total);
+  /// **'{done, plural, =1{1 reading of {total} planned} other{{done} readings of {total} planned}}'**
+  String regularityCount(int done, int total);
 
   /// No description provided for @regularityLabel.
   ///
@@ -1357,23 +1346,11 @@ abstract class AppLocalizations {
   /// **'Change thresholds'**
   String get changeThresholds;
 
-  /// No description provided for @thresholdsTitle.
+  /// No description provided for @restoreEsc.
   ///
   /// In en, this message translates to:
-  /// **'Thresholds'**
-  String get thresholdsTitle;
-
-  /// No description provided for @thresholdHigh.
-  ///
-  /// In en, this message translates to:
-  /// **'Threshold (“high” from here)'**
-  String get thresholdHigh;
-
-  /// No description provided for @thresholdElevated.
-  ///
-  /// In en, this message translates to:
-  /// **'Start of the elevated band'**
-  String get thresholdElevated;
+  /// **'Reset to ESC 2024'**
+  String get restoreEsc;
 
   /// No description provided for @thresholdsDoctorNote.
   ///
@@ -1393,12 +1370,6 @@ abstract class AppLocalizations {
   /// **'The elevated band must be below the threshold.'**
   String get thresholdsErrOrder;
 
-  /// No description provided for @esc2024.
-  ///
-  /// In en, this message translates to:
-  /// **'ESC 2024'**
-  String get esc2024;
-
   /// No description provided for @reportScreenSubtitle.
   ///
   /// In en, this message translates to:
@@ -1411,35 +1382,17 @@ abstract class AppLocalizations {
   /// **'Report preview'**
   String get previewTitle;
 
-  /// No description provided for @shareHistory.
+  /// No description provided for @neverExported.
   ///
   /// In en, this message translates to:
-  /// **'Share history'**
-  String get shareHistory;
+  /// **'You haven\'t exported the diary yet'**
+  String get neverExported;
 
-  /// No description provided for @noShares.
+  /// No description provided for @lastExported.
   ///
   /// In en, this message translates to:
-  /// **'No shares yet.'**
-  String get noShares;
-
-  /// No description provided for @atTime.
-  ///
-  /// In en, this message translates to:
-  /// **'at {time}'**
-  String atTime(String time);
-
-  /// No description provided for @neverShared.
-  ///
-  /// In en, this message translates to:
-  /// **'You haven\'t shared the diary yet'**
-  String get neverShared;
-
-  /// No description provided for @lastShared.
-  ///
-  /// In en, this message translates to:
-  /// **'Last shared: {date}'**
-  String lastShared(String date);
+  /// **'Last export: {date}'**
+  String lastExported(String date);
 
   /// No description provided for @newSince.
   ///
@@ -1447,16 +1400,10 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 new reading since then} other{{count} new readings since then}}'**
   String newSince(int count);
 
-  /// No description provided for @history.
-  ///
-  /// In en, this message translates to:
-  /// **'History'**
-  String get history;
-
   /// No description provided for @rangeSinceLast.
   ///
   /// In en, this message translates to:
-  /// **'Since last sent'**
+  /// **'Only new ones'**
   String get rangeSinceLast;
 
   /// No description provided for @noReadingsInPeriod.
@@ -1495,60 +1442,6 @@ abstract class AppLocalizations {
   /// **'Notes'**
   String get includeNotes;
 
-  /// No description provided for @includePhotos.
-  ///
-  /// In en, this message translates to:
-  /// **'Photos of the display'**
-  String get includePhotos;
-
-  /// No description provided for @includePhotosHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Available with display scanning'**
-  String get includePhotosHint;
-
-  /// No description provided for @profileTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Your details in the report'**
-  String get profileTitle;
-
-  /// No description provided for @profileHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Name, date of birth, device'**
-  String get profileHint;
-
-  /// No description provided for @profileIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'They stay on your phone and only appear in the PDF you export.'**
-  String get profileIntro;
-
-  /// No description provided for @nameField.
-  ///
-  /// In en, this message translates to:
-  /// **'Full name'**
-  String get nameField;
-
-  /// No description provided for @birthField.
-  ///
-  /// In en, this message translates to:
-  /// **'Date of birth'**
-  String get birthField;
-
-  /// No description provided for @deviceField.
-  ///
-  /// In en, this message translates to:
-  /// **'Device'**
-  String get deviceField;
-
-  /// No description provided for @deviceHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Make and model'**
-  String get deviceHint;
-
   /// No description provided for @downloadPdf.
   ///
   /// In en, this message translates to:
@@ -1561,28 +1454,10 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get share;
 
-  /// No description provided for @secureLinkTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Secure link or QR'**
-  String get secureLinkTitle;
-
-  /// No description provided for @secureLinkBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Opens in the browser, expires after 30 days, revocable any time. Coming soon.'**
-  String get secureLinkBody;
-
-  /// No description provided for @secureLinkFeature.
-  ///
-  /// In en, this message translates to:
-  /// **'Secure link and QR'**
-  String get secureLinkFeature;
-
   /// No description provided for @exportCsv.
   ///
   /// In en, this message translates to:
-  /// **'Export data as CSV'**
+  /// **'Export data as CSV (for Excel)'**
   String get exportCsv;
 
   /// No description provided for @pdfA4.
@@ -1633,17 +1508,17 @@ abstract class AppLocalizations {
   /// **'PressSure_diary'**
   String get fileNameBase;
 
-  /// No description provided for @notYetShared.
+  /// No description provided for @notYetExported.
   ///
   /// In en, this message translates to:
-  /// **'You haven\'t shared the diary yet.'**
-  String get notYetShared;
+  /// **'You haven\'t exported the diary yet.'**
+  String get notYetExported;
 
   /// No description provided for @inARowStat.
   ///
   /// In en, this message translates to:
-  /// **'{noun} in a row'**
-  String inARowStat(String noun);
+  /// **'readings in a row'**
+  String get inARowStat;
 
   /// No description provided for @recordInARow.
   ///
@@ -1660,20 +1535,32 @@ abstract class AppLocalizations {
   /// No description provided for @jollyAvailable.
   ///
   /// In en, this message translates to:
-  /// **'Monthly joker: 1 available'**
-  String get jollyAvailable;
+  /// **'{count, plural, =0{Jokers: none available} =1{Jokers: 1 available} other{Jokers: {count} available}}'**
+  String jollyAvailable(int count);
 
-  /// No description provided for @jollyUsed.
+  /// No description provided for @jollyNext.
   ///
   /// In en, this message translates to:
-  /// **'Monthly joker: already used'**
-  String get jollyUsed;
+  /// **'next in {count}'**
+  String jollyNext(int count);
+
+  /// No description provided for @jollyNextSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Next joker in 1 reading} other{Next joker in {count} readings}}'**
+  String jollyNextSemantics(int count);
+
+  /// No description provided for @jollyFull.
+  ///
+  /// In en, this message translates to:
+  /// **'maximum reached'**
+  String get jollyFull;
 
   /// No description provided for @jollyBody.
   ///
   /// In en, this message translates to:
-  /// **'{kind, select, mon{Skip a Monday?} tue{Skip a Tuesday?} wed{Skip a Wednesday?} thu{Skip a Thursday?} fri{Skip a Friday?} sat{Skip a Saturday?} sun{Skip a Sunday?} day{Skip a day?} other{Skip a reading?}} The joker keeps your streak alive. You get one every month.'**
-  String jollyBody(String kind);
+  /// **'Skip a reading? A joker keeps your streak alive. You earn one every {every} planned readings, up to {max}.'**
+  String jollyBody(int every, int max);
 
   /// No description provided for @groupConsistency.
   ///
@@ -1717,11 +1604,17 @@ abstract class AppLocalizations {
   /// **'Month with the lowest average'**
   String get lowestMonth;
 
-  /// No description provided for @completeMonths.
+  /// No description provided for @onSchedule.
   ///
   /// In en, this message translates to:
-  /// **'Complete months'**
-  String get completeMonths;
+  /// **'Readings on the planned days'**
+  String get onSchedule;
+
+  /// No description provided for @onScheduleValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} · {percent}'**
+  String onScheduleValue(int done, int total, String percent);
 
   /// No description provided for @badgeSemantics.
   ///
@@ -1795,17 +1688,17 @@ abstract class AppLocalizations {
   /// **'Beat your record'**
   String get badgeBeatRecord;
 
-  /// No description provided for @badgeYearOf.
+  /// No description provided for @badgeYear.
   ///
   /// In en, this message translates to:
-  /// **'A year of {occasions}'**
-  String badgeYearOf(String occasions);
+  /// **'A year of tracking'**
+  String get badgeYear;
 
-  /// No description provided for @badgeYearReadings.
+  /// No description provided for @monthsProgress.
   ///
   /// In en, this message translates to:
-  /// **'A year of readings'**
-  String get badgeYearReadings;
+  /// **'{value} of {target} months'**
+  String monthsProgress(int value, int target);
 
   /// No description provided for @badgeHonest.
   ///
@@ -2036,12 +1929,6 @@ abstract class AppLocalizations {
   /// **'Generated on {date}'**
   String generatedOn(String date);
 
-  /// No description provided for @patient.
-  ///
-  /// In en, this message translates to:
-  /// **'Patient'**
-  String get patient;
-
   /// No description provided for @averagePulse.
   ///
   /// In en, this message translates to:
@@ -2069,7 +1956,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportBoldNote.
   ///
   /// In en, this message translates to:
-  /// **'· in bold, those above {sys}/{dia}'**
+  /// **'· in bold, those above threshold ({sys}/{dia})'**
   String reportBoldNote(int sys, int dia);
 
   /// No description provided for @colDate.
@@ -2093,7 +1980,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportFooter.
   ///
   /// In en, this message translates to:
-  /// **'* with note. Bands and threshold {sys}/{dia} mmHg: {source}. Values confirmed by the user. PressSure is a personal diary, not a medical device.'**
+  /// **'* with note. Bands and threshold {sys}/{dia} mmHg: {source}. Values entered by the user, by hand or from a photo of the display. PressSure is a personal diary, not a medical device.'**
   String reportFooter(int sys, int dia, String source);
 
   /// No description provided for @footerSourceEsc.
@@ -2149,6 +2036,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'no'**
   String get no;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @reminderSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{schedule} · {time}'**
+  String reminderSummary(String schedule, String time);
+
+  /// No description provided for @thresholdsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Band thresholds'**
+  String get thresholdsSection;
+
+  /// No description provided for @thresholdsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Default: European ESC 2024 guidelines, home measurement. They apply to charts, diary, achievements and exports.'**
+  String get thresholdsIntro;
+
+  /// No description provided for @elevatedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Elevated from'**
+  String get elevatedFrom;
+
+  /// No description provided for @aboveThresholdFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Above threshold from'**
+  String get aboveThresholdFrom;
+
+  /// No description provided for @thresholdFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{band}, {value}'**
+  String thresholdFieldLabel(String band, String value);
+
+  /// No description provided for @dataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data'**
+  String get dataTitle;
+
+  /// No description provided for @dataIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'They stay on this phone only. To switch phones or keep them safe, save a backup file wherever you like.'**
+  String get dataIntro;
+
+  /// No description provided for @saveBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Save backup'**
+  String get saveBackup;
+
+  /// No description provided for @restoreBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restoreBackup;
+
+  /// No description provided for @backupReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me to back up every month'**
+  String get backupReminder;
+
+  /// No description provided for @lastBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup: {date}'**
+  String lastBackup(String date);
+
+  /// No description provided for @noBackupYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup yet'**
+  String get noBackupYet;
+
+  /// No description provided for @backupSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved'**
+  String get backupSaved;
+
+  /// No description provided for @backupFileBase.
+  ///
+  /// In en, this message translates to:
+  /// **'PressSure_backup'**
+  String get backupFileBase;
+
+  /// No description provided for @restoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore the backup?'**
+  String get restoreTitle;
+
+  /// No description provided for @restoreBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The diary on this phone is replaced by the backup from {date} ({readings}). This can\'t be undone.'**
+  String restoreBody(String date, String readings);
+
+  /// No description provided for @restoreDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Diary restored: {readings}'**
+  String restoreDone(String readings);
+
+  /// No description provided for @backupInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The chosen file isn\'t a PressSure backup.'**
+  String get backupInvalid;
+
+  /// No description provided for @backupTooNew.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup comes from a newer version of PressSure: update the app and try again.'**
+  String get backupTooNew;
+
+  /// No description provided for @aboutThresholds.
+  ///
+  /// In en, this message translates to:
+  /// **'Disclaimer and threshold sources'**
+  String get aboutThresholds;
+
+  /// No description provided for @aboutDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Disclaimer'**
+  String get aboutDisclaimer;
+
+  /// No description provided for @aboutSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Threshold sources'**
+  String get aboutSources;
+
+  /// No description provided for @aboutBands.
+  ///
+  /// In en, this message translates to:
+  /// **'Default bands for home measurement: non-elevated below {elevSys}/{elevDia}, elevated from {elevSys}/{elevDia}, above threshold from {highSys}/{highDia} mmHg.'**
+  String aboutBands(int elevSys, int elevDia, int highSys, int highDia);
+
+  /// No description provided for @aboutSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source: 2024 ESC Guidelines for the management of elevated blood pressure and hypertension, European Heart Journal, 2024.'**
+  String get aboutSource;
+
+  /// No description provided for @version.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get version;
+
+  /// No description provided for @deleteAllData.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all data'**
+  String get deleteAllData;
+
+  /// No description provided for @deleteAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all data?'**
+  String get deleteAllTitle;
+
+  /// No description provided for @deleteAllBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Readings, habit and settings are erased from this phone. Without a backup they can\'t be recovered.'**
+  String get deleteAllBody;
+
+  /// No description provided for @deleteAllConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete everything'**
+  String get deleteAllConfirm;
+
+  /// No description provided for @backupReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Time for a backup'**
+  String get backupReminderTitle;
+
+  /// No description provided for @backupReminderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a copy of your diary wherever you like: Settings › Your data.'**
+  String get backupReminderBody;
 }
 
 class _AppLocalizationsDelegate

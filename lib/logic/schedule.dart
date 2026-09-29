@@ -134,7 +134,11 @@ class TrackedPeriod {
 }
 
 /// Follows the habit over time: which periods were measured, streaks and
-/// the monthly "jolly" that forgives one missed period per month.
+/// the jollies that keep a streak alive when a period is missed.
+///
+/// A jolly is earned every [jollyEvery] periods that go by (measured or
+/// not), up to [jollyMax]; a missed period spends one if the streak is
+/// running.
 class HabitTracker {
   HabitTracker._(
     this.schedule,
@@ -144,8 +148,12 @@ class HabitTracker {
     this.bestStreakPeriods,
     this.bestBeforeCurrentRun,
     this.recordBeatenAt,
-    this.jollyAvailable,
+    this.jollies,
+    this._elapsedCount,
   );
+
+  static const jollyEvery = 10;
+  static const jollyMax = 3;
 
   factory HabitTracker(
     Schedule schedule,
@@ -155,12 +163,11 @@ class HabitTracker {
     final sorted = [...measurements]
       ..sort((a, b) => a.takenAt.compareTo(b.takenAt));
     if (sorted.isEmpty) {
-      return HabitTracker._(schedule, const [], 0, 0, null, 0, null, true);
+      return HabitTracker._(schedule, const [], 0, 0, null, 0, null, 0, 0);
     }
 
     final periods = schedule.periodsBetween(sorted.first.takenAt, now);
     final tracked = <TrackedPeriod>[];
-    final jollyMonths = <int>{};
     var index = 0;
     var running = 0;
     var runStart = 0;
@@ -168,6 +175,8 @@ class HabitTracker {
     List<Period>? bestRange;
     var bestOfEndedRuns = 0;
     DateTime? recordBeatenAt;
+    var jollies = 0;
+    var elapsed = 0;
 
     for (var i = 0; i < periods.length; i++) {
       final p = periods[i];
@@ -195,20 +204,21 @@ class HabitTracker {
         }
       } else if (p.contains(now)) {
         status = PeriodStatus.pending;
+      } else if (running > 0 && jollies > 0) {
+        status = PeriodStatus.jolly;
+        jollies--;
       } else {
-        final month = p.start.year * 12 + p.start.month;
-        if (running > 0 && jollyMonths.add(month)) {
-          status = PeriodStatus.jolly;
-        } else {
-          status = PeriodStatus.missed;
-          if (running > bestOfEndedRuns) bestOfEndedRuns = running;
-          running = 0;
-        }
+        status = PeriodStatus.missed;
+        if (running > bestOfEndedRuns) bestOfEndedRuns = running;
+        running = 0;
+      }
+      if (status != PeriodStatus.pending) {
+        elapsed++;
+        if (elapsed % jollyEvery == 0 && jollies < jollyMax) jollies++;
       }
       tracked.add(TrackedPeriod(p, status, inPeriod, running));
     }
 
-    final month = now.year * 12 + now.month;
     return HabitTracker._(
       schedule,
       tracked,
@@ -217,7 +227,8 @@ class HabitTracker {
       bestRange,
       bestOfEndedRuns,
       recordBeatenAt,
-      !jollyMonths.contains(month),
+      jollies,
+      elapsed,
     );
   }
 
@@ -234,7 +245,17 @@ class HabitTracker {
   /// Longest streak that already ended before the current one.
   final int bestBeforeCurrentRun;
   final DateTime? recordBeatenAt;
-  final bool jollyAvailable;
+
+  /// Jollies available now.
+  final int jollies;
+  final int _elapsedCount;
+
+  bool get jollyAvailable => jollies > 0;
+
+  /// Periods still to go before the next jolly; null when the jollies are
+  /// already at [jollyMax].
+  int? get nextJollyIn =>
+      jollies >= jollyMax ? null : jollyEvery - _elapsedCount % jollyEvery;
 
   TrackedPeriod? get current => periods.isEmpty ? null : periods.last;
 

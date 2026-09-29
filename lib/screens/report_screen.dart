@@ -7,13 +7,11 @@ import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../l10n/l10n.dart';
-import '../models/settings.dart';
 import '../services/report.dart';
 import '../services/report_pdf.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
-import 'flows.dart';
 
 /// "07 · Esporta e condividi".
 class ReportScreen extends StatefulWidget {
@@ -132,53 +130,6 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  void _showHistory(AppSettings settings) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        final l = context.l10n;
-        final dates = context.dates;
-        return SafeArea(
-          child: ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            children: [
-              Text(
-                l.shareHistory,
-                style: AppText.body(16, weight: FontWeight.w800),
-              ),
-              const SizedBox(height: 8),
-              if (settings.shares.isEmpty)
-                Text(
-                  l.noShares,
-                  style: AppText.body(14, color: AppColors.muted),
-                ),
-              for (final d in settings.shares.reversed)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.picture_as_pdf_outlined),
-                  title: Text(capitalize(dates.fullDate(d))),
-                  subtitle: Text(l.atTime(dates.time(d))),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _editProfile(ReportProfile profile) async {
-    final state = AppScope.read(context);
-    final result = await showDialog<ReportProfile>(
-      context: context,
-      builder: (_) => _ProfileDialog(initial: profile),
-    );
-    if (result != null) {
-      await state.updateSettings(state.settings.copyWith(profile: result));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -220,17 +171,24 @@ class _ReportScreenState extends State<ReportScreen> {
           AppCard(
             color: AppColors.primarySoft,
             borderColor: null,
-            padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+            padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
             child: Row(
               children: [
+                const IconTile(
+                  icon: Icons.share_outlined,
+                  background: Colors.white,
+                  foreground: AppColors.primary,
+                  size: 40,
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         lastShare == null
-                            ? l.neverShared
-                            : l.lastShared(dates.dayMonth(lastShare)),
+                            ? l.neverExported
+                            : l.lastExported(dates.dayMonth(lastShare)),
                         style: AppText.body(
                           14,
                           weight: FontWeight.w800,
@@ -245,11 +203,6 @@ class _ReportScreenState extends State<ReportScreen> {
                     ],
                   ),
                 ),
-                if (lastShare != null)
-                  TextButton(
-                    onPressed: () => _showHistory(settings),
-                    child: Text(l.history),
-                  ),
               ],
             ),
           ),
@@ -265,7 +218,7 @@ class _ReportScreenState extends State<ReportScreen> {
                     selected: _range == r,
                     minHeight: 40,
                     onTap: r == ReportRange.sinceLastShare && lastShare == null
-                        ? () => showSnack(context, l.notYetShared)
+                        ? () => showSnack(context, l.notYetExported)
                         : () => setState(() => _range = r),
                   ),
                 ),
@@ -307,39 +260,6 @@ class _ReportScreenState extends State<ReportScreen> {
                   _options.notes,
                   (v) => setState(() => _options = _options.copyWith(notes: v)),
                 ),
-                _toggle(
-                  l.includePhotos,
-                  false,
-                  null,
-                  subtitle: l.includePhotosHint,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          AppCard(
-            padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-            onTap: () => _editProfile(settings.profile),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l.profileTitle,
-                        style: AppText.body(14, weight: FontWeight.w800),
-                      ),
-                      Text(
-                        settings.profile.name.isEmpty
-                            ? l.profileHint
-                            : settings.profile.name,
-                        style: AppText.body(12, color: AppColors.muted),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
               ],
             ),
           ),
@@ -367,42 +287,6 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          AppCard(
-            padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-            onTap: () => showComingSoon(context, l.secureLinkFeature),
-            child: Row(
-              children: [
-                const IconTile(
-                  icon: Icons.qr_code_2_rounded,
-                  background: AppColors.blueSoft,
-                  foreground: AppColors.diastolic,
-                  size: 40,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l.secureLinkTitle,
-                        style: AppText.body(14, weight: FontWeight.w800),
-                      ),
-                      Text(
-                        l.secureLinkBody,
-                        style: AppText.body(
-                          12,
-                          height: 1.4,
-                          color: AppColors.muted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
-              ],
-            ),
-          ),
           const SizedBox(height: 8),
           Center(
             child: TextButton(
@@ -420,20 +304,12 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  Widget _toggle(
-    String label,
-    bool value,
-    ValueChanged<bool>? onChanged, {
-    String? subtitle,
-  }) {
+  Widget _toggle(String label, bool value, ValueChanged<bool> onChanged) {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
       value: value,
       onChanged: onChanged,
       title: Text(label, style: AppText.body(15)),
-      subtitle: subtitle == null
-          ? null
-          : Text(subtitle, style: AppText.body(12, color: AppColors.muted)),
     );
   }
 }
@@ -447,12 +323,11 @@ class _PreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final t = data.thresholds;
     final rows = [
       (l.previewReadings, '${data.items.length}'),
       (l.previewAverage, data.overall?.toString() ?? '–'),
       (l.previewLast4, data.lastFour?.toString() ?? '–'),
-      (l.bandHigh(t.highSystolic, t.highDiastolic), '${data.highCount}'),
+      (l.aboveThreshold, '${data.highCount}'),
     ];
     return AppCard(
       padding: const EdgeInsets.all(14),
@@ -598,87 +473,4 @@ class _MiniChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _ProfileDialog extends StatefulWidget {
-  const _ProfileDialog({required this.initial});
-
-  final ReportProfile initial;
-
-  @override
-  State<_ProfileDialog> createState() => _ProfileDialogState();
-}
-
-class _ProfileDialogState extends State<_ProfileDialog> {
-  late final _name = TextEditingController(text: widget.initial.name);
-  late final _birth = TextEditingController(text: widget.initial.birthDate);
-  late final _device = TextEditingController(text: widget.initial.device);
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _birth.dispose();
-    _device.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    return AlertDialog(
-      title: Text(l.profileTitle),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              l.profileIntro,
-              style: AppText.body(13, color: AppColors.muted),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _name,
-              textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(labelText: l.nameField),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _birth,
-              keyboardType: TextInputType.datetime,
-              decoration: InputDecoration(
-                labelText: l.birthField,
-                // An example in the local date format.
-                hintText: context.dates.numericDate(DateTime(1950, 12, 31)),
-              ),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _device,
-              decoration: InputDecoration(
-                labelText: l.deviceField,
-                hintText: l.deviceHint,
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l.cancel),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(
-            context,
-            ReportProfile(
-              name: _name.text.trim(),
-              birthDate: _birth.text.trim(),
-              device: _device.text.trim(),
-            ),
-          ),
-          child: Text(l.save),
-        ),
-      ],
-    );
-  }
 }

@@ -74,21 +74,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String weekdayPlural(String day) {
-    String _temp0 = intl.Intl.selectLogic(day, {
-      'mon': 'Mondays',
-      'tue': 'Tuesdays',
-      'wed': 'Wednesdays',
-      'thu': 'Thursdays',
-      'fri': 'Fridays',
-      'sat': 'Saturdays',
-      'sun': 'Sundays',
-      'other': 'days',
-    });
-    return '$_temp0';
-  }
-
-  @override
   String weekdayInList(String day) {
     String _temp0 = intl.Intl.selectLogic(day, {
       'mon': 'Mondays',
@@ -119,17 +104,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String nounDays(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'days',
-      one: 'day',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String nounReadings(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -152,13 +126,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String countNoun(int count, String noun) {
-    return '$count $noun';
+  String inARow(int count) {
+    return '$count in a row';
   }
 
   @override
-  String inARow(int count, String noun) {
-    return '$count $noun in a row';
+  String readingsInARow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count readings in a row',
+      one: '1 reading in a row',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -277,8 +257,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String bandHigh(int sys, int dia) {
-    return 'Above $sys/$dia';
+    return 'Above threshold ($sys/$dia)';
   }
+
+  @override
+  String get aboveThreshold => 'Above threshold';
 
   @override
   String get welcomeTitle => 'Your blood pressure diary, worry-free';
@@ -292,6 +275,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get welcomeFeatureExport => 'Export to PDF or CSV whenever you need';
+
+  @override
+  String get welcomeFeatureLocal =>
+      'Your data stays on your phone: no account, no server';
 
   @override
   String get welcomeNoticeTitle => 'Good to know, just once';
@@ -317,7 +304,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get frequencyDaily => 'Every day';
 
   @override
-  String get frequencyFewTimesWeek => 'A few times a week';
+  String get frequencyFewTimesWeek => 'On several days a week';
 
   @override
   String get frequencyWeekly => 'Once a week';
@@ -345,11 +332,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get habitRemindNextDayHint =>
-      'Just once, then wait for the next reading';
-
-  @override
-  String get habitRemindNextDayHintMonthly =>
-      'Just once, then wait for next month';
+      'Just once, then wait for the next planned reading';
 
   @override
   String get habitMonthlySummary => 'End-of-month summary';
@@ -408,11 +391,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get byHand => 'By hand';
 
   @override
-  String get habitAndReminders => 'Reminders and habit';
+  String get habitAndReminders => 'Habit and reminders';
 
   @override
   String periodDotsLabel(int total, int done, int missed) {
-    return 'Last $total times: $done measured, $missed skipped';
+    return 'Last $total planned readings: $done done, $missed missed';
   }
 
   @override
@@ -436,6 +419,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String previousReading(String value) {
+    return 'previous reading $value';
+  }
+
+  @override
   String get bandByEsc => 'band per the European ESC 2024 guidelines';
 
   @override
@@ -454,7 +442,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get legendThreshold => 'Threshold';
 
   @override
-  String get legendSkipped => 'Skipped';
+  String get legendSkipped => 'Missed readings';
 
   @override
   String get trendEmpty =>
@@ -641,13 +629,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String celebrateSince(
-    String date,
-    String readings,
-    int total,
-    String occasions,
-  ) {
-    return 'Since $date: $readings out of $total $occasions.';
+  String celebrateSince(String date, String readings, int total) {
+    return 'Since $date: $readings out of $total planned.';
   }
 
   @override
@@ -662,11 +645,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get jollyAvailableLine => 'This month\'s joker is still available.';
-
-  @override
-  String get jollyUsedLine =>
-      'This month\'s joker is used: don\'t skip the next one.';
+  String jollyLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You have $count jokers if you skip a reading.',
+      one: 'You have a joker if you skip a reading.',
+      zero: 'No jokers left: don\'t skip the next one.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String lowestSince(String value, String month) {
@@ -795,8 +783,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readFromPhoto => 'Read from photo';
 
   @override
-  String gapLabel(int count, String noun) {
-    return '$count $noun without a reading';
+  String gapLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count missed readings',
+      one: '1 missed reading',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -873,8 +867,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get regularity => 'Regularity';
 
   @override
-  String regularityCount(int done, String noun, int total) {
-    return '$done $noun of $total';
+  String regularityCount(int done, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      done,
+      locale: localeName,
+      other: '$done readings of $total planned',
+      one: '1 reading of $total planned',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -902,13 +902,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changeThresholds => 'Change thresholds';
 
   @override
-  String get thresholdsTitle => 'Thresholds';
-
-  @override
-  String get thresholdHigh => 'Threshold (“high” from here)';
-
-  @override
-  String get thresholdElevated => 'Start of the elevated band';
+  String get restoreEsc => 'Reset to ESC 2024';
 
   @override
   String get thresholdsDoctorNote =>
@@ -922,9 +916,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'The elevated band must be below the threshold.';
 
   @override
-  String get esc2024 => 'ESC 2024';
-
-  @override
   String get reportScreenSubtitle =>
       'Your diary as PDF or CSV, when you need it';
 
@@ -932,22 +923,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previewTitle => 'Report preview';
 
   @override
-  String get shareHistory => 'Share history';
+  String get neverExported => 'You haven\'t exported the diary yet';
 
   @override
-  String get noShares => 'No shares yet.';
-
-  @override
-  String atTime(String time) {
-    return 'at $time';
-  }
-
-  @override
-  String get neverShared => 'You haven\'t shared the diary yet';
-
-  @override
-  String lastShared(String date) {
-    return 'Last shared: $date';
+  String lastExported(String date) {
+    return 'Last export: $date';
   }
 
   @override
@@ -962,10 +942,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get history => 'History';
-
-  @override
-  String get rangeSinceLast => 'Since last sent';
+  String get rangeSinceLast => 'Only new ones';
 
   @override
   String get noReadingsInPeriod => 'No readings in this period';
@@ -988,51 +965,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get includeNotes => 'Notes';
 
   @override
-  String get includePhotos => 'Photos of the display';
-
-  @override
-  String get includePhotosHint => 'Available with display scanning';
-
-  @override
-  String get profileTitle => 'Your details in the report';
-
-  @override
-  String get profileHint => 'Name, date of birth, device';
-
-  @override
-  String get profileIntro =>
-      'They stay on your phone and only appear in the PDF you export.';
-
-  @override
-  String get nameField => 'Full name';
-
-  @override
-  String get birthField => 'Date of birth';
-
-  @override
-  String get deviceField => 'Device';
-
-  @override
-  String get deviceHint => 'Make and model';
-
-  @override
   String get downloadPdf => 'Download PDF';
 
   @override
   String get share => 'Share';
 
   @override
-  String get secureLinkTitle => 'Secure link or QR';
-
-  @override
-  String get secureLinkBody =>
-      'Opens in the browser, expires after 30 days, revocable any time. Coming soon.';
-
-  @override
-  String get secureLinkFeature => 'Secure link and QR';
-
-  @override
-  String get exportCsv => 'Export data as CSV';
+  String get exportCsv => 'Export data as CSV (for Excel)';
 
   @override
   String get pdfA4 => 'PDF A4';
@@ -1059,12 +998,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileNameBase => 'PressSure_diary';
 
   @override
-  String get notYetShared => 'You haven\'t shared the diary yet.';
+  String get notYetExported => 'You haven\'t exported the diary yet.';
 
   @override
-  String inARowStat(String noun) {
-    return '$noun in a row';
-  }
+  String get inARowStat => 'readings in a row';
 
   @override
   String get recordInARow => 'record streak';
@@ -1073,25 +1010,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totalReadings => 'total readings';
 
   @override
-  String get jollyAvailable => 'Monthly joker: 1 available';
+  String jollyAvailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Jokers: $count available',
+      one: 'Jokers: 1 available',
+      zero: 'Jokers: none available',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get jollyUsed => 'Monthly joker: already used';
+  String jollyNext(int count) {
+    return 'next in $count';
+  }
 
   @override
-  String jollyBody(String kind) {
-    String _temp0 = intl.Intl.selectLogic(kind, {
-      'mon': 'Skip a Monday?',
-      'tue': 'Skip a Tuesday?',
-      'wed': 'Skip a Wednesday?',
-      'thu': 'Skip a Thursday?',
-      'fri': 'Skip a Friday?',
-      'sat': 'Skip a Saturday?',
-      'sun': 'Skip a Sunday?',
-      'day': 'Skip a day?',
-      'other': 'Skip a reading?',
-    });
-    return '$_temp0 The joker keeps your streak alive. You get one every month.';
+  String jollyNextSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Next joker in $count readings',
+      one: 'Next joker in 1 reading',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get jollyFull => 'maximum reached';
+
+  @override
+  String jollyBody(int every, int max) {
+    return 'Skip a reading? A joker keeps your streak alive. You earn one every $every planned readings, up to $max.';
   }
 
   @override
@@ -1118,7 +1069,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lowestMonth => 'Month with the lowest average';
 
   @override
-  String get completeMonths => 'Complete months';
+  String get onSchedule => 'Readings on the planned days';
+
+  @override
+  String onScheduleValue(int done, int total, String percent) {
+    return '$done of $total · $percent';
+  }
 
   @override
   String badgeSemantics(String title, String state, String detail) {
@@ -1159,12 +1115,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get badgeBeatRecord => 'Beat your record';
 
   @override
-  String badgeYearOf(String occasions) {
-    return 'A year of $occasions';
-  }
+  String get badgeYear => 'A year of tracking';
 
   @override
-  String get badgeYearReadings => 'A year of readings';
+  String monthsProgress(int value, int target) {
+    return '$value of $target months';
+  }
 
   @override
   String get badgeHonest => 'Honest diary';
@@ -1326,9 +1282,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get patient => 'Patient';
-
-  @override
   String get averagePulse => 'Average pulse';
 
   @override
@@ -1342,7 +1295,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String reportBoldNote(int sys, int dia) {
-    return '· in bold, those above $sys/$dia';
+    return '· in bold, those above threshold ($sys/$dia)';
   }
 
   @override
@@ -1356,7 +1309,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String reportFooter(int sys, int dia, String source) {
-    return '* with note. Bands and threshold $sys/$dia mmHg: $source. Values confirmed by the user. PressSure is a personal diary, not a medical device.';
+    return '* with note. Bands and threshold $sys/$dia mmHg: $source. Values entered by the user, by hand or from a photo of the display. PressSure is a personal diary, not a medical device.';
   }
 
   @override
@@ -1388,4 +1341,121 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get no => 'no';
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String reminderSummary(String schedule, String time) {
+    return '$schedule · $time';
+  }
+
+  @override
+  String get thresholdsSection => 'Band thresholds';
+
+  @override
+  String get thresholdsIntro =>
+      'Default: European ESC 2024 guidelines, home measurement. They apply to charts, diary, achievements and exports.';
+
+  @override
+  String get elevatedFrom => 'Elevated from';
+
+  @override
+  String get aboveThresholdFrom => 'Above threshold from';
+
+  @override
+  String thresholdFieldLabel(String band, String value) {
+    return '$band, $value';
+  }
+
+  @override
+  String get dataTitle => 'Your data';
+
+  @override
+  String get dataIntro =>
+      'They stay on this phone only. To switch phones or keep them safe, save a backup file wherever you like.';
+
+  @override
+  String get saveBackup => 'Save backup';
+
+  @override
+  String get restoreBackup => 'Restore';
+
+  @override
+  String get backupReminder => 'Remind me to back up every month';
+
+  @override
+  String lastBackup(String date) {
+    return 'Last backup: $date';
+  }
+
+  @override
+  String get noBackupYet => 'No backup yet';
+
+  @override
+  String get backupSaved => 'Backup saved';
+
+  @override
+  String get backupFileBase => 'PressSure_backup';
+
+  @override
+  String get restoreTitle => 'Restore the backup?';
+
+  @override
+  String restoreBody(String date, String readings) {
+    return 'The diary on this phone is replaced by the backup from $date ($readings). This can\'t be undone.';
+  }
+
+  @override
+  String restoreDone(String readings) {
+    return 'Diary restored: $readings';
+  }
+
+  @override
+  String get backupInvalid => 'The chosen file isn\'t a PressSure backup.';
+
+  @override
+  String get backupTooNew =>
+      'This backup comes from a newer version of PressSure: update the app and try again.';
+
+  @override
+  String get aboutThresholds => 'Disclaimer and threshold sources';
+
+  @override
+  String get aboutDisclaimer => 'Disclaimer';
+
+  @override
+  String get aboutSources => 'Threshold sources';
+
+  @override
+  String aboutBands(int elevSys, int elevDia, int highSys, int highDia) {
+    return 'Default bands for home measurement: non-elevated below $elevSys/$elevDia, elevated from $elevSys/$elevDia, above threshold from $highSys/$highDia mmHg.';
+  }
+
+  @override
+  String get aboutSource =>
+      'Source: 2024 ESC Guidelines for the management of elevated blood pressure and hypertension, European Heart Journal, 2024.';
+
+  @override
+  String get version => 'Version';
+
+  @override
+  String get deleteAllData => 'Delete all data';
+
+  @override
+  String get deleteAllTitle => 'Delete all data?';
+
+  @override
+  String get deleteAllBody =>
+      'Readings, habit and settings are erased from this phone. Without a backup they can\'t be recovered.';
+
+  @override
+  String get deleteAllConfirm => 'Delete everything';
+
+  @override
+  String get backupReminderTitle => 'Time for a backup';
+
+  @override
+  String get backupReminderBody =>
+      'Save a copy of your diary wherever you like: Settings › Your data.';
 }
