@@ -52,6 +52,10 @@ app.*.map.json
 *.aab
 *.hprof
 google-services.json
+# Release signing: never commit the keystore or its passwords
+key.properties
+*.jks
+*.keystore
 
 # OCR benchmark: real readings, kept out of git (see tool/ocr_bench/README.md)
 /ocr_corpus/

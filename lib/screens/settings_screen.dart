@@ -283,6 +283,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: AppText.body(15, color: AppColors.muted),
                   ),
                 ),
+                const Divider(height: 1),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    l.privacyPolicy,
+                    style: AppText.body(15, weight: FontWeight.w700),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.muted,
+                  ),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+                  ),
+                ),
               ],
             ),
           ),
@@ -687,6 +702,61 @@ class AboutScreen extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(l.aboutModel, style: body),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Informativa privacy". Same text as `docs/privacy.html`.
+class PrivacyScreen extends StatelessWidget {
+  const PrivacyScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final body = AppText.body(15, height: 1.5, color: AppColors.ink2);
+    final sections = [
+      (l.privacyDataTitle, l.privacyData),
+      (l.privacyCameraTitle, l.privacyCamera),
+      (l.privacyOfflineTitle, l.privacyOffline),
+      (l.privacySharingTitle, l.privacySharing),
+      (l.privacyDeleteTitle, l.privacyDelete),
+      (l.privacyChildrenTitle, l.privacyChildren),
+      (l.privacyContactTitle, l.privacyContact(privacyEmail)),
+    ];
+    return Scaffold(
+      appBar: AppBar(title: Text(l.privacyPolicy), titleSpacing: 0),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+        children: [
+          AppCard(child: Text(l.privacyIntro, style: body)),
+          for (final (title, text) in sections) ...[
+            const SizedBox(height: 14),
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      title,
+                      style: AppText.body(16, weight: FontWeight.w800),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(text, style: body),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Center(
+            child: Text(
+              l.privacyUpdated(context.dates.fullDate(privacyUpdated)),
+              style: AppText.body(13, color: AppColors.muted),
             ),
           ),
         ],

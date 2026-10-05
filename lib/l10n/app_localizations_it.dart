@@ -1578,6 +1578,69 @@ class AppLocalizationsIt extends AppLocalizations {
   String get version => 'Versione';
 
   @override
+  String get privacyPolicy => 'Informativa privacy';
+
+  @override
+  String get privacyIntro =>
+      'PressSure non raccoglie i tuoi dati: restano sul tuo telefono. Non c’è un account, non c’è un server, non ci sono pubblicità né analisi d’uso.';
+
+  @override
+  String get privacyDataTitle => 'Cosa salva l’app';
+
+  @override
+  String get privacyData =>
+      'Le tue misure (pressione sistolica e diastolica, polso, data e ora, braccio, posizione, note), l’abitudine di misura e le impostazioni. Sono salvate nella memoria privata dell’app su questo telefono e le altre app non vi hanno accesso.';
+
+  @override
+  String get privacyCameraTitle => 'Fotocamera e foto';
+
+  @override
+  String get privacyCamera =>
+      'La fotocamera serve solo a fotografare il display dello sfigmomanometro. La foto, scattata o scelta dalla galleria, viene letta sul telefono e cancellata subito dopo: non viene salvata né inviata a nessuno. L’app non usa il microfono, la posizione né i contatti.';
+
+  @override
+  String get privacyOfflineTitle => 'Nessuna connessione';
+
+  @override
+  String get privacyOffline =>
+      'L’app non ha il permesso di accedere a Internet e non contiene strumenti di tracciamento. I promemoria sono notifiche programmate sul telefono. Il backup automatico di Android è disattivato.';
+
+  @override
+  String get privacySharingTitle =>
+      'Cosa esce dal telefono, solo per tua scelta';
+
+  @override
+  String get privacySharing =>
+      'Il PDF o il CSV del diario, che condividi con l’app che scegli tu, e il file di backup, che salvi dove preferisci. Questi file contengono le tue misure e non sono cifrati: da quel momento li gestisci tu.';
+
+  @override
+  String get privacyDeleteTitle => 'Conservazione e cancellazione';
+
+  @override
+  String get privacyDelete =>
+      'I dati restano finché non li cancelli: da Impostazioni › Cancella tutti i dati, oppure disinstallando l’app. Non avendoli io, non posso né leggerli né recuperarli.';
+
+  @override
+  String get privacyChildrenTitle => 'Minori e uso medico';
+
+  @override
+  String get privacyChildren =>
+      'L’app non è rivolta ai bambini. PressSure è un diario personale: non è un dispositivo medico e non fa diagnosi. Per dubbi sulla tua salute, rivolgiti al tuo medico.';
+
+  @override
+  String get privacyContactTitle => 'Contatti';
+
+  @override
+  String privacyContact(String email) {
+    return 'PressSure è sviluppata da Federico Scarel. Per domande su questa informativa scrivi a $email. Se cambia il modo in cui l’app tratta i dati, aggiorno questa pagina e la data qui sotto.';
+  }
+
+  @override
+  String privacyUpdated(String date) {
+    return 'Ultimo aggiornamento: $date';
+  }
+
+  @override
   String get deleteAllData => 'Cancella tutti i dati';
 
   @override

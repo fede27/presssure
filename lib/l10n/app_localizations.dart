@@ -2415,6 +2415,108 @@ abstract class AppLocalizations {
   /// **'Version'**
   String get version;
 
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @privacyIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'PressSure doesn\'t collect your data: it stays on your phone. There is no account, no server, no ads and no usage analytics.'**
+  String get privacyIntro;
+
+  /// No description provided for @privacyDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What the app saves'**
+  String get privacyDataTitle;
+
+  /// No description provided for @privacyData.
+  ///
+  /// In en, this message translates to:
+  /// **'Your readings (systolic and diastolic pressure, pulse, date and time, arm, position, notes), your measuring habit and your settings. They are kept in the app\'s private storage on this phone and other apps can\'t access them.'**
+  String get privacyData;
+
+  /// No description provided for @privacyCameraTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera and photos'**
+  String get privacyCameraTitle;
+
+  /// No description provided for @privacyCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'The camera is only used to photograph the monitor display. The photo, taken or picked from the gallery, is read on the phone and deleted right after: it is never saved or sent to anyone. The app doesn\'t use the microphone, your location or your contacts.'**
+  String get privacyCamera;
+
+  /// No description provided for @privacyOfflineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection'**
+  String get privacyOfflineTitle;
+
+  /// No description provided for @privacyOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'The app has no permission to access the internet and contains no tracking tools. Reminders are notifications scheduled on the phone. Android\'s automatic backup is turned off.'**
+  String get privacyOffline;
+
+  /// No description provided for @privacySharingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What leaves the phone, only if you choose'**
+  String get privacySharingTitle;
+
+  /// No description provided for @privacySharing.
+  ///
+  /// In en, this message translates to:
+  /// **'The PDF or CSV of the diary, which you share with the app you pick, and the backup file, which you save wherever you like. These files contain your readings and aren\'t encrypted: from then on, you manage them.'**
+  String get privacySharing;
+
+  /// No description provided for @privacyDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeping and deleting'**
+  String get privacyDeleteTitle;
+
+  /// No description provided for @privacyDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Data stays until you delete it: Settings › Delete all data, or by uninstalling the app. Since I don\'t have it, I can\'t read it or recover it.'**
+  String get privacyDelete;
+
+  /// No description provided for @privacyChildrenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Children and medical use'**
+  String get privacyChildrenTitle;
+
+  /// No description provided for @privacyChildren.
+  ///
+  /// In en, this message translates to:
+  /// **'The app is not directed at children. PressSure is a personal diary: it is not a medical device and does not diagnose. If you have doubts about your health, talk to your doctor.'**
+  String get privacyChildren;
+
+  /// No description provided for @privacyContactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get privacyContactTitle;
+
+  /// No description provided for @privacyContact.
+  ///
+  /// In en, this message translates to:
+  /// **'PressSure is developed by Federico Scarel. For questions about this policy write to {email}. If the way the app handles data changes, I update this page and the date below.'**
+  String privacyContact(String email);
+
+  /// No description provided for @privacyUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: {date}'**
+  String privacyUpdated(String date);
+
   /// No description provided for @deleteAllData.
   ///
   /// In en, this message translates to:

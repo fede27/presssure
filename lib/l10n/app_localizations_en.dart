@@ -1579,6 +1579,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get version => 'Version';
 
   @override
+  String get privacyPolicy => 'Privacy policy';
+
+  @override
+  String get privacyIntro =>
+      'PressSure doesn\'t collect your data: it stays on your phone. There is no account, no server, no ads and no usage analytics.';
+
+  @override
+  String get privacyDataTitle => 'What the app saves';
+
+  @override
+  String get privacyData =>
+      'Your readings (systolic and diastolic pressure, pulse, date and time, arm, position, notes), your measuring habit and your settings. They are kept in the app\'s private storage on this phone and other apps can\'t access them.';
+
+  @override
+  String get privacyCameraTitle => 'Camera and photos';
+
+  @override
+  String get privacyCamera =>
+      'The camera is only used to photograph the monitor display. The photo, taken or picked from the gallery, is read on the phone and deleted right after: it is never saved or sent to anyone. The app doesn\'t use the microphone, your location or your contacts.';
+
+  @override
+  String get privacyOfflineTitle => 'No connection';
+
+  @override
+  String get privacyOffline =>
+      'The app has no permission to access the internet and contains no tracking tools. Reminders are notifications scheduled on the phone. Android\'s automatic backup is turned off.';
+
+  @override
+  String get privacySharingTitle => 'What leaves the phone, only if you choose';
+
+  @override
+  String get privacySharing =>
+      'The PDF or CSV of the diary, which you share with the app you pick, and the backup file, which you save wherever you like. These files contain your readings and aren\'t encrypted: from then on, you manage them.';
+
+  @override
+  String get privacyDeleteTitle => 'Keeping and deleting';
+
+  @override
+  String get privacyDelete =>
+      'Data stays until you delete it: Settings › Delete all data, or by uninstalling the app. Since I don\'t have it, I can\'t read it or recover it.';
+
+  @override
+  String get privacyChildrenTitle => 'Children and medical use';
+
+  @override
+  String get privacyChildren =>
+      'The app is not directed at children. PressSure is a personal diary: it is not a medical device and does not diagnose. If you have doubts about your health, talk to your doctor.';
+
+  @override
+  String get privacyContactTitle => 'Contact';
+
+  @override
+  String privacyContact(String email) {
+    return 'PressSure is developed by Federico Scarel. For questions about this policy write to $email. If the way the app handles data changes, I update this page and the date below.';
+  }
+
+  @override
+  String privacyUpdated(String date) {
+    return 'Last updated: $date';
+  }
+
+  @override
   String get deleteAllData => 'Delete all data';
 
   @override

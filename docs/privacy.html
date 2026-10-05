@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PressSure · Informativa privacy / Privacy policy</title>
+<meta name="description" content="Informativa privacy dell'app PressSure, diario della pressione per Android. Privacy policy of the PressSure blood pressure diary app for Android.">
+<style>
+  :root {
+    --bg: #fdf8f3;
+    --card: #ffffff;
+    --ink: #2a2118;
+    --ink2: #4f4338;
+    --muted: #7a6c5e;
+    --accent: #c4581f;
+    --line: #eadccd;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1712;
+      --card: #272019;
+      --ink: #f4ece3;
+      --ink2: #d6c8b9;
+      --muted: #a39484;
+      --accent: #f0935a;
+      --line: #3a3128;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 42rem; margin: 0 auto; padding: 32px 16px 56px; }
+  h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 4px; }
+  h2 { font-size: 1.1rem; margin: 0 0 6px; }
+  p { margin: 0; color: var(--ink2); }
+  a { color: var(--accent); }
+  .brand { color: var(--accent); font-weight: 700; letter-spacing: .02em; }
+  .lang-nav { margin: 8px 0 28px; color: var(--muted); }
+  .lead { font-size: 1.05rem; color: var(--ink); }
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-top: 14px;
+  }
+  .updated { margin-top: 18px; color: var(--muted); font-size: .9rem; text-align: center; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 48px 0 32px; }
+</style>
+</head>
+<body>
+<main>
+
+<!--
+  Keep this page in step with the app: the text of PrivacyScreen
+  (lib/screens/settings_screen.dart, strings privacy* in lib/l10n) and the
+  date in lib/config.dart. Change all of them when the app handles data
+  differently.
+-->
+
+<p class="brand">PressSure</p>
+<p class="lang-nav">Italiano · <a href="#en">English</a></p>
+
+<!-- ───────────── Italiano ───────────── -->
+<article lang="it" id="it">
+  <h1>Informativa privacy</h1>
+  <p class="lead">PressSure è un diario della pressione per Android. Non raccoglie i tuoi dati: restano sul tuo telefono. Non c’è un account, non c’è un server, non ci sono pubblicità né analisi d’uso.</p>
+
+  <section class="card">
+    <h2>Cosa salva l’app</h2>
+    <p>Le tue misure (pressione sistolica e diastolica, polso, data e ora, braccio, posizione, note), l’abitudine di misura e le impostazioni. Sono salvate nella memoria privata dell’app su questo telefono e le altre app non vi hanno accesso.</p>
+  </section>
+
+  <section class="card">
+    <h2>Fotocamera e foto</h2>
+    <p>La fotocamera serve solo a fotografare il display dello sfigmomanometro. La foto, scattata o scelta dalla galleria, viene letta sul telefono e cancellata subito dopo: non viene salvata né inviata a nessuno. L’app non usa il microfono, la posizione né i contatti.</p>
+  </section>
+
+  <section class="card">
+    <h2>Nessuna connessione</h2>
+    <p>L’app non ha il permesso di accedere a Internet e non contiene strumenti di tracciamento. I promemoria sono notifiche programmate sul telefono. Il backup automatico di Android è disattivato.</p>
+  </section>
+
+  <section class="card">
+    <h2>Cosa esce dal telefono, solo per tua scelta</h2>
+    <p>Il PDF o il CSV del diario, che condividi con l’app che scegli tu, e il file di backup, che salvi dove preferisci. Questi file contengono le tue misure e non sono cifrati: da quel momento li gestisci tu.</p>
+  </section>
+
+  <section class="card">
+    <h2>Conservazione e cancellazione</h2>
+    <p>I dati restano finché non li cancelli: da Impostazioni › Cancella tutti i dati, oppure disinstallando l’app. Non avendoli io, non posso né leggerli né recuperarli.</p>
+  </section>
+
+  <section class="card">
+    <h2>Minori e uso medico</h2>
+    <p>L’app non è rivolta ai bambini. PressSure è un diario personale: non è un dispositivo medico e non fa diagnosi. Per dubbi sulla tua salute, rivolgiti al tuo medico.</p>
+  </section>
+
+  <section class="card">
+    <h2>Contatti</h2>
+    <p>PressSure è sviluppata da Federico Scarel. Per domande su questa informativa scrivi a <a href="mailto:federico.scarel@gmail.com">federico.scarel@gmail.com</a>. Se cambia il modo in cui l’app tratta i dati, aggiorno questa pagina e la data qui sotto.</p>
+  </section>
+
+  <p class="updated">Ultimo aggiornamento: 5 ottobre 2026</p>
+</article>
+
+<hr>
+
+<!-- ───────────── English ───────────── -->
+<article lang="en" id="en">
+  <h1>Privacy policy</h1>
+  <p class="lead">PressSure is a blood pressure diary for Android. It doesn't collect your data: it stays on your phone. There is no account, no server, no ads and no usage analytics.</p>
+
+  <section class="card">
+    <h2>What the app saves</h2>
+    <p>Your readings (systolic and diastolic pressure, pulse, date and time, arm, position, notes), your measuring habit and your settings. They are kept in the app's private storage on this phone and other apps can't access them.</p>
+  </section>
+
+  <section class="card">
+    <h2>Camera and photos</h2>
+    <p>The camera is only used to photograph the monitor display. The photo, taken or picked from the gallery, is read on the phone and deleted right after: it is never saved or sent to anyone. The app doesn't use the microphone, your location or your contacts.</p>
+  </section>
+
+  <section class="card">
+    <h2>No connection</h2>
+    <p>The app has no permission to access the internet and contains no tracking tools. Reminders are notifications scheduled on the phone. Android's automatic backup is turned off.</p>
+  </section>
+
+  <section class="card">
+    <h2>What leaves the phone, only if you choose</h2>
+    <p>The PDF or CSV of the diary, which you share with the app you pick, and the backup file, which you save wherever you like. These files contain your readings and aren't encrypted: from then on, you manage them.</p>
+  </section>
+
+  <section class="card">
+    <h2>Keeping and deleting</h2>
+    <p>Data stays until you delete it: Settings › Delete all data, or by uninstalling the app. Since I don't have it, I can't read it or recover it.</p>
+  </section>
+
+  <section class="card">
+    <h2>Children and medical use</h2>
+    <p>The app is not directed at children. PressSure is a personal diary: it is not a medical device and does not diagnose. If you have doubts about your health, talk to your doctor.</p>
+  </section>
+
+  <section class="card">
+    <h2>Contact</h2>
+    <p>PressSure is developed by Federico Scarel. For questions about this policy write to <a href="mailto:federico.scarel@gmail.com">federico.scarel@gmail.com</a>. If the way the app handles data changes, I update this page and the date below.</p>
+  </section>
+
+  <p class="updated">Last updated: October 5, 2026</p>
+</article>
+
+</main>
+</body>
+</html>

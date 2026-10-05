@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:presssure/config.dart';
 import 'package:presssure/models/settings.dart';
 import 'package:presssure/screens/celebrate_screen.dart';
 import 'package:presssure/screens/entry_screen.dart';
@@ -244,6 +245,28 @@ void main() {
       expect(find.byType(HabitScreen), findsOneWidget);
       await tapAndSettle(tester, find.byTooltip('Indietro'));
       expect(find.byType(SettingsScreen), findsOneWidget);
+    });
+
+    testWidgets('privacy policy opens below the version', (tester) async {
+      await pumpApp(tester, measurements: designReadings());
+      await tapAndSettle(tester, find.byTooltip('Impostazioni'));
+
+      // The screen on top is the last Scrollable: the home is still below.
+      Future<void> scrollTo(Finder target) => tester.scrollUntilVisible(
+        target,
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+
+      final entry = find.text('Informativa privacy');
+      await scrollTo(entry);
+      await tapAndSettle(tester, entry);
+      expect(find.byType(PrivacyScreen), findsOneWidget);
+      expect(find.textContaining('non raccoglie i tuoi dati'), findsOneWidget);
+
+      await scrollTo(find.text('Ultimo aggiornamento: 5 ottobre 2026'));
+      await scrollTo(find.text('Contatti'));
+      expect(find.textContaining(privacyEmail), findsOneWidget);
     });
 
     testWidgets('thresholds are saved when valid, reset to ESC 2024', (

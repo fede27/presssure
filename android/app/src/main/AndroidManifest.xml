@@ -14,9 +14,15 @@
     <!-- From a media library pulled in by a plugin: the app never uses the
          network. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove"/>
+    <!-- Implied by the TensorFlow Lite GPU library (it targets an old SDK):
+         the app never reads the phone state. -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove"/>
     <uses-feature android:name="android.hardware.camera.any" android:required="false"
         tools:replace="android:required"/>
+    <!-- The diary stays on the phone: no automatic cloud backup. Backups are
+         the file the user saves from Settings. -->
     <application
+        android:allowBackup="false"
         android:label="${appLabel}"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
