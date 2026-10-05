@@ -111,6 +111,18 @@ void main() {
     expect(nudges(plan), isEmpty);
   });
 
+  test('reminders cover four weeks even when daily', () {
+    final plan = makePlan(
+      settings: weekly.copyWith(frequency: Frequency.daily),
+      measurements: const [],
+      now: DateTime(2026, 9, 26, 10),
+    );
+    final r = reminders(plan);
+    expect(r.last.at, DateTime(2026, 10, 24, 8));
+    expect(r.map((x) => x.id).toSet().length, r.length);
+    expect(r.last.id, lessThan(nudgeIdBase));
+  });
+
   test('reminders are written in the phone language', () {
     final plan = makePlan(
       settings: weekly.copyWith(monthlySummary: true),

@@ -46,6 +46,12 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   file_picker: ^13.1.0
+  camera: ^0.12.1
+  image: ^4.10.1
+  permission_handler: ^13.0.2
+  archive: ^4.3.0
+  flutter_email_sender: ^10.0.1
+  tflite_flutter: ^0.12.1
 
 dev_dependencies:
   flutter_test:
@@ -57,6 +63,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  integration_test:
+    sdk: flutter
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -70,6 +78,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Seven-segment digit detector (tool/ocr_train; dataset CC BY 4.0).
+  assets:
+    - assets/models/
 
   # Variable fonts from Google Fonts (SIL Open Font License, see assets/fonts).
   # Weights are applied through FontVariation in lib/theme.dart.

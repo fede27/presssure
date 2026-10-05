@@ -52,3 +52,15 @@ app.*.map.json
 *.aab
 *.hprof
 google-services.json
+
+# OCR benchmark: real readings, kept out of git (see tool/ocr_bench/README.md)
+/ocr_corpus/
+/ocr_results/
+/test/ocr/recordings/
+
+# Training data and Python environment (see tool/ocr_train/README.md)
+/roboflow_dataset/
+/tool/ocr_train/.venv/
+/tool/ocr_train/work/
+# Base weights, downloaded again by ultralytics when missing.
+/tool/ocr_train/*.pt

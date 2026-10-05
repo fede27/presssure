@@ -323,13 +323,13 @@ abstract class AppLocalizations {
   /// No description provided for @categoryNonElevated.
   ///
   /// In en, this message translates to:
-  /// **'Not elevated'**
+  /// **'Optimal'**
   String get categoryNonElevated;
 
   /// No description provided for @categoryElevated.
   ///
   /// In en, this message translates to:
-  /// **'Elevated'**
+  /// **'Intermediate'**
   String get categoryElevated;
 
   /// No description provided for @categoryHigh.
@@ -341,13 +341,13 @@ abstract class AppLocalizations {
   /// No description provided for @bandNonElevated.
   ///
   /// In en, this message translates to:
-  /// **'Not elevated (below {sys}/{dia})'**
+  /// **'Optimal (below {sys}/{dia})'**
   String bandNonElevated(int sys, int dia);
 
   /// No description provided for @bandElevated.
   ///
   /// In en, this message translates to:
-  /// **'Elevated ({sysFrom}–{sysTo} / {diaFrom}–{diaTo})'**
+  /// **'Intermediate ({sysFrom}–{sysTo} / {diaFrom}–{diaTo})'**
   String bandElevated(int sysFrom, int sysTo, int diaFrom, int diaTo);
 
   /// No description provided for @bandHigh.
@@ -373,6 +373,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Snap the display, the app writes down the values'**
   String get welcomeFeaturePhoto;
+
+  /// No description provided for @welcomeFeaturePhotoCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Snap the display and copy the values: soon the app will write them by itself'**
+  String get welcomeFeaturePhotoCopy;
 
   /// No description provided for @welcomeFeatureReminder.
   ///
@@ -692,11 +698,209 @@ abstract class AppLocalizations {
   /// **'Sit with your back supported, rest for five minutes and measure on your arm with the cuff at heart level. Then log the values here: band, charts and reports build themselves.'**
   String get emptyBody;
 
-  /// No description provided for @scanPlaceholder.
+  /// No description provided for @scanReadTitle.
   ///
   /// In en, this message translates to:
-  /// **'Reading from the display is coming soon. For now, enter the values by hand.'**
-  String get scanPlaceholder;
+  /// **'Read from the photo'**
+  String get scanReadTitle;
+
+  /// No description provided for @photoCopyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the values from the display'**
+  String get photoCopyTitle;
+
+  /// No description provided for @scanPhotoNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'{when} · the photo isn\'t saved'**
+  String scanPhotoNotSaved(String when);
+
+  /// No description provided for @scanRetake.
+  ///
+  /// In en, this message translates to:
+  /// **'Retake'**
+  String get scanRetake;
+
+  /// No description provided for @scanSure.
+  ///
+  /// In en, this message translates to:
+  /// **'Read with confidence'**
+  String get scanSure;
+
+  /// No description provided for @scanUnsure.
+  ///
+  /// In en, this message translates to:
+  /// **'Blurry digit in the photo: compare with the display and fix it if needed.'**
+  String get scanUnsure;
+
+  /// No description provided for @scanMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not found in the photo: copy it from the display.'**
+  String get scanMissing;
+
+  /// No description provided for @scanNothingRead.
+  ///
+  /// In en, this message translates to:
+  /// **'I can\'t read the values: try again avoiding reflections, or enter them by hand.'**
+  String get scanNothingRead;
+
+  /// No description provided for @scanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photograph the display'**
+  String get scanTitle;
+
+  /// No description provided for @scanFlash.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get scanFlash;
+
+  /// No description provided for @scanFrameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fit the display inside the frame'**
+  String get scanFrameHint;
+
+  /// No description provided for @scanGlareHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Avoid reflections: tilt the phone slightly'**
+  String get scanGlareHint;
+
+  /// No description provided for @scanFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'From gallery'**
+  String get scanFromGallery;
+
+  /// No description provided for @scanShutter.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get scanShutter;
+
+  /// No description provided for @scanReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the values…'**
+  String get scanReading;
+
+  /// No description provided for @scanCameraError.
+  ///
+  /// In en, this message translates to:
+  /// **'I can\'t open the camera. Try again, or use a photo from the gallery.'**
+  String get scanCameraError;
+
+  /// No description provided for @scanCameraNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'To photograph the display PressSure needs the camera. The photo isn\'t saved.'**
+  String get scanCameraNeeded;
+
+  /// No description provided for @scanCameraBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera permission was denied. Turn it on in the app settings, then come back here.'**
+  String get scanCameraBlocked;
+
+  /// No description provided for @scanAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get scanAllow;
+
+  /// No description provided for @scanOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get scanOpenSettings;
+
+  /// No description provided for @betaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Beta program'**
+  String get betaTitle;
+
+  /// No description provided for @keepScansTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help me improve the reading'**
+  String get keepScansTitle;
+
+  /// No description provided for @keepScansBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps on this phone the last {count} photos of the display, with the values the app read and the ones you save. Nothing leaves by itself: you can email them to {email}. Turning it off deletes them.'**
+  String keepScansBody(int count, String email);
+
+  /// No description provided for @keptScansCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No readings kept} =1{1 reading kept} other{{count} readings kept}}'**
+  String keptScansCount(int count);
+
+  /// No description provided for @sendScans.
+  ///
+  /// In en, this message translates to:
+  /// **'Send for analysis'**
+  String get sendScans;
+
+  /// No description provided for @clearScans.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get clearScans;
+
+  /// No description provided for @scansCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept readings deleted'**
+  String get scansCleared;
+
+  /// No description provided for @keepScansYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, keep the readings'**
+  String get keepScansYes;
+
+  /// No description provided for @keepScansNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No, thanks'**
+  String get keepScansNo;
+
+  /// No description provided for @noMailApp.
+  ///
+  /// In en, this message translates to:
+  /// **'No email app available to send them.'**
+  String get noMailApp;
+
+  /// No description provided for @feedbackSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'PressSure {version}: display readings'**
+  String feedbackSubject(String version);
+
+  /// No description provided for @feedbackBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Attached, {count, plural, =1{1 reading} other{{count} readings}} of the display taken with PressSure: photos, values read by the app and values saved.\n\nNotes (optional):\n'**
+  String feedbackBody(int count);
+
+  /// No description provided for @scanPhotoKept.
+  ///
+  /// In en, this message translates to:
+  /// **'{when} · the photo stays on the phone for analysis'**
+  String scanPhotoKept(String when);
+
+  /// No description provided for @scanRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get scanRetry;
 
   /// No description provided for @entryNewTitle.
   ///
@@ -803,7 +1007,7 @@ abstract class AppLocalizations {
   /// No description provided for @scanTooltip.
   ///
   /// In en, this message translates to:
-  /// **'Read from the display (coming soon)'**
+  /// **'Photograph the display'**
   String get scanTooltip;
 
   /// No description provided for @categoryHint.
@@ -1367,7 +1571,7 @@ abstract class AppLocalizations {
   /// No description provided for @thresholdsErrOrder.
   ///
   /// In en, this message translates to:
-  /// **'The elevated band must be below the threshold.'**
+  /// **'The intermediate band must be below the threshold.'**
   String get thresholdsErrOrder;
 
   /// No description provided for @reportScreenSubtitle.
@@ -2064,7 +2268,7 @@ abstract class AppLocalizations {
   /// No description provided for @elevatedFrom.
   ///
   /// In en, this message translates to:
-  /// **'Elevated from'**
+  /// **'Intermediate from'**
   String get elevatedFrom;
 
   /// No description provided for @aboveThresholdFrom.
@@ -2142,7 +2346,7 @@ abstract class AppLocalizations {
   /// No description provided for @restoreBody.
   ///
   /// In en, this message translates to:
-  /// **'The diary on this phone is replaced by the backup from {date} ({readings}). This can\'t be undone.'**
+  /// **'The diary, habit, reminders and thresholds on this phone are replaced by those in the backup from {date} ({readings}). This can\'t be undone.'**
   String restoreBody(String date, String readings);
 
   /// No description provided for @restoreDone.
@@ -2184,7 +2388,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutBands.
   ///
   /// In en, this message translates to:
-  /// **'Default bands for home measurement: non-elevated below {elevSys}/{elevDia}, elevated from {elevSys}/{elevDia}, above threshold from {highSys}/{highDia} mmHg.'**
+  /// **'Default bands for home measurement: optimal below {elevSys}/{elevDia}, intermediate from {elevSys}/{elevDia} (“elevated” in the guidelines), above threshold from {highSys}/{highDia} mmHg.'**
   String aboutBands(int elevSys, int elevDia, int highSys, int highDia);
 
   /// No description provided for @aboutSource.
@@ -2192,6 +2396,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Source: 2024 ESC Guidelines for the management of elevated blood pressure and hypertension, European Heart Journal, 2024.'**
   String get aboutSource;
+
+  /// No description provided for @aboutCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Acknowledgements'**
+  String get aboutCredits;
+
+  /// No description provided for @aboutModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the display uses a model trained on the “Blood-Pressure-monitor-digit-reader” dataset by naphop (Roboflow Universe), CC BY 4.0 licence.'**
+  String get aboutModel;
 
   /// No description provided for @version.
   ///

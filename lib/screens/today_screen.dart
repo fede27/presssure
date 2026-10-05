@@ -262,7 +262,7 @@ class _HabitCard extends StatelessWidget {
             children: [
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: () => showScanPlaceholder(context),
+                  onPressed: () => openCamera(context),
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: AppColors.primary,

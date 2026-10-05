@@ -81,17 +81,9 @@ void main() {
     expect(find.text('Ultima misura · domenica 20 settembre'), findsOneWidget);
     final value = tester.widget<BpValue>(find.byType(BpValue));
     expect((value.systolic, value.diastolic), (126, 82));
-    expect(find.text('Elevata'), findsOneWidget);
+    expect(find.text('Intermedia'), findsOneWidget);
     expect(find.text('141/90'), findsOneWidget);
     expect(find.text('−11/−8'), findsOneWidget);
-  });
-
-  testWidgets('"Fotografa" is a placeholder for now', (tester) async {
-    await pumpApp(tester, measurements: designReadings());
-
-    await tester.tap(find.text('Fotografa'));
-    await tester.pump();
-    expect(find.textContaining('arriverà presto'), findsOneWidget);
   });
 
   testWidgets('manual reading: saved, then celebrated', (tester) async {
@@ -102,7 +94,7 @@ void main() {
 
     await enterReading(tester, '124', '77', pulse: '68');
     expect(
-      find.textContaining('Fascia «elevata» secondo ESC 2024'),
+      find.textContaining('Fascia «intermedia» secondo ESC 2024'),
       findsOneWidget,
     );
     expect(find.textContaining('misura precedente 126/82'), findsOneWidget);
@@ -268,10 +260,10 @@ void main() {
       expect(state.thresholds.isEsc2024, isFalse);
 
       // Elevated not below the threshold: shown, not saved.
-      await tester.enterText(field('Elevata da, sistolica'), '145');
+      await tester.enterText(field('Intermedia da, sistolica'), '145');
       await tester.pump();
       expect(
-        find.text('La fascia elevata deve stare sotto la soglia.'),
+        find.text('La fascia intermedia deve stare sotto la soglia.'),
         findsOneWidget,
       );
       expect(state.thresholds.elevatedSystolic, 120);
@@ -279,7 +271,7 @@ void main() {
       await tapAndSettle(tester, find.text('Ripristina ESC 2024'));
       expect(state.thresholds.isEsc2024, isTrue);
       expect(
-        find.text('La fascia elevata deve stare sotto la soglia.'),
+        find.text('La fascia intermedia deve stare sotto la soglia.'),
         findsNothing,
       );
       semantics.dispose();

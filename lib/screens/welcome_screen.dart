@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
+import '../state/app_state.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import 'habit_screen.dart';
@@ -49,7 +50,10 @@ class WelcomeScreen extends StatelessWidget {
                       icon: Icons.photo_camera_outlined,
                       background: AppColors.primarySoft,
                       foreground: AppColors.primary,
-                      text: l.welcomeFeaturePhoto,
+                      // No promise the app cannot keep yet.
+                      text: AppScope.of(context).scanner == null
+                          ? l.welcomeFeaturePhotoCopy
+                          : l.welcomeFeaturePhoto,
                     ),
                     const SizedBox(height: 14),
                     _Feature(

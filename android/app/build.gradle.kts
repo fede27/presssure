@@ -6,7 +6,8 @@ plugins {
 
 android {
     namespace = "com.fscarel.presssure"
-    compileSdk = flutter.compileSdkVersion
+    // 37: permission_handler needs it to compile; the target SDK is unchanged.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -28,9 +29,16 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["appLabel"] = "PressSure"
     }
 
     buildTypes {
+        // Development builds are a separate app next to the real one: tests,
+        // the OCR benchmark and `flutter run` never touch the real diary.
+        debug {
+            applicationIdSuffix = ".debug"
+            manifestPlaceholders["appLabel"] = "PressSure dev"
+        }
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
@@ -52,4 +60,5 @@ flutter {
 dependencies {
     // Required by flutter_local_notifications for scheduled reminders.
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    testImplementation("junit:junit:4.13.2")
 }

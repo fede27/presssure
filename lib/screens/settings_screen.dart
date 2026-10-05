@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 
+import '../config.dart';
 import '../l10n/l10n.dart';
 import '../models/settings.dart';
 import '../services/backup.dart';
@@ -13,9 +15,6 @@ import '../theme.dart';
 import '../widgets/common.dart';
 import 'flows.dart';
 import 'habit_screen.dart';
-
-/// Shown in "Versione"; keep in step with `version` in pubspec.yaml.
-const appVersion = '1.0';
 
 Future<void> openSettings(BuildContext context) =>
     Navigator.of(context)
@@ -249,6 +248,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
+          if (state.beta && state.scanLog != null) ...[
+            const SizedBox(height: 14),
+            const _BetaCard(),
+          ],
           const SizedBox(height: 14),
           AppCard(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -290,6 +293,126 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextButton.styleFrom(foregroundColor: AppColors.high),
               child: Text(l.deleteAllData),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Beta builds: consent to keep the last readings, and sending them.
+class _BetaCard extends StatefulWidget {
+  const _BetaCard();
+
+  @override
+  State<_BetaCard> createState() => _BetaCardState();
+}
+
+class _BetaCardState extends State<_BetaCard> {
+  late Future<int> _count = _load();
+  var _sending = false;
+
+  Future<int> _load() => AppScope.read(context).scanLog!.count();
+
+  void _reload() => setState(() {
+    _count = _load();
+  });
+
+  Future<void> _toggle(bool keep) async {
+    final l = context.l10n;
+    final hadScans = await _count > 0;
+    if (!mounted) return;
+    await AppScope.read(context).setKeepScans(keep);
+    if (!mounted) return;
+    _reload();
+    if (!keep && hadScans) showSnack(context, l.scansCleared);
+  }
+
+  Future<void> _clear() async {
+    final l = context.l10n;
+    await AppScope.read(context).scanLog!.clear();
+    if (!mounted) return;
+    _reload();
+    showSnack(context, l.scansCleared);
+  }
+
+  Future<void> _send() async {
+    final l = context.l10n;
+    setState(() => _sending = true);
+    try {
+      await AppScope.read(context).sendKeptScans();
+    } on FlutterEmailSenderNotAvailableException {
+      if (mounted) showSnack(context, l.noMailApp);
+    } catch (e) {
+      if (mounted) showSnack(context, l.errorGeneric('$e'));
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final state = AppScope.of(context);
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: _CardHeading(
+              title: l.betaTitle,
+              intro: l.keepScansBody(keptScans, feedbackEmail),
+            ),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: state.keepsScans,
+            onChanged: _toggle,
+            title: Text(l.keepScansTitle, style: AppText.body(15)),
+          ),
+          FutureBuilder<int>(
+            future: _count,
+            builder: (context, snapshot) {
+              final count = snapshot.data ?? 0;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8, bottom: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l.keptScansCount(count),
+                      style: AppText.body(13, color: AppColors.muted),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (count > 0)
+                          TextButton(
+                            onPressed: _sending ? null : _clear,
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.high,
+                            ),
+                            child: Text(l.clearScans),
+                          ),
+                        FilledButton.icon(
+                          onPressed: count == 0 || _sending ? null : _send,
+                          icon: const Icon(
+                            Icons.mail_outline_rounded,
+                            size: 18,
+                          ),
+                          label: Text(l.sendScans),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -386,7 +509,7 @@ class _ThresholdsCardState extends State<_ThresholdsCard> {
       color: AppColors.muted,
     );
 
-    // Screen readers hear "Elevata da, sistolica".
+    // Screen readers hear "Intermedia da, sistolica".
     Widget field(String band, String kind, TextEditingController c) => SizedBox(
       width: 72,
       child: Semantics(
@@ -552,6 +675,17 @@ class AboutScreen extends StatelessWidget {
                 Text(l.aboutSource, style: body),
                 const SizedBox(height: 8),
                 Text(l.thresholdsDoctorNote, style: body),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                heading(l.aboutCredits),
+                const SizedBox(height: 6),
+                Text(l.aboutModel, style: body),
               ],
             ),
           ),

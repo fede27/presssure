@@ -42,9 +42,11 @@ const backupIdBase = 400;
 
 /// The reminders to schedule from [now], replacing any previous ones.
 ///
-/// Covers the next [count] due days (skipping the current one when already
-/// measured), an optional nudge the day after each due day, the
-/// end-of-month summary and the monthly backup reminder.
+/// Covers the next due days (skipping the current one when already
+/// measured), at least [count] and at least [minDays] ahead, so that
+/// reminders keep coming when the app is not opened for a while; an
+/// optional nudge the day after each due day, the end-of-month summary and
+/// the monthly backup reminder.
 List<PlannedReminder> planReminders({
   required AppSettings settings,
   required List<Measurement> measurements,
@@ -52,6 +54,7 @@ List<PlannedReminder> planReminders({
   required AppLocalizations l10n,
   required Dates dates,
   int count = 8,
+  int minDays = 28,
 }) {
   // Before the welcome (or after erasing everything) there is no habit yet.
   if (!settings.onboarded) return const [];
@@ -93,7 +96,8 @@ List<PlannedReminder> planReminders({
     }
   }
 
-  for (var i = 0; i < count; i++) {
+  final horizon = addDays(dateOnly(now), minDays);
+  for (var i = 0; i < count || !due.isAfter(horizon); i++) {
     final text = reminderText(l10n, schedule, due, last);
     result.add(
       PlannedReminder(

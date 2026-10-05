@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 
+import '../config.dart';
 import '../l10n/l10n.dart';
 import '../logic/achievements.dart';
 import '../logic/bp_category.dart';
@@ -8,7 +10,12 @@ import '../logic/schedule.dart';
 import '../logic/stats.dart';
 import '../models/measurement.dart';
 import '../models/settings.dart';
+import '../ocr/corpus.dart';
+import '../ocr/ocr_engine.dart';
+import '../ocr/reading_scanner.dart';
+import '../ocr/scan_log.dart';
 import '../services/backup.dart';
+import '../services/photo_source.dart';
 import '../services/reminders.dart';
 import '../services/repository.dart';
 
@@ -33,17 +40,46 @@ class AppState extends ChangeNotifier {
   AppState({
     required this._repository,
     required this._reminders,
+    OcrEngine? ocrEngine,
+    PhotoSource Function()? photoSource,
+    this.corpus,
+    this.scanLog,
+    this.beta = isBetaBuild,
+    Future<void> Function(Email email)? sendEmail,
     DateTime Function()? clock,
     Locale locale = const Locale('en'),
   }) : _clock = clock ?? DateTime.now,
        _locale = locale,
-       _dateLocale = locale.languageCode {
+       _dateLocale = locale.languageCode,
+       scanner = ocrEngine == null ? null : ReadingScanner(ocrEngine),
+       newPhotoSource = photoSource ?? CameraPhotoSource.new,
+       _sendEmail = sendEmail ?? FlutterEmailSender.send {
     _measurements = sortedByDate(_repository.loadMeasurements());
     _settings = _repository.loadSettings();
   }
 
   final Repository _repository;
   final ReminderService _reminders;
+
+  /// Reads the monitor display from a photo; null when no OCR engine is
+  /// available, and the camera buttons fall back to manual entry.
+  final ReadingScanner? scanner;
+
+  /// A fresh camera for each scan screen.
+  final PhotoSource Function() newPhotoSource;
+
+  /// Development builds: keeps read photos to grow the OCR test corpus.
+  final CorpusRecorder? corpus;
+
+  /// Beta build: the readings can be kept and sent for analysis.
+  final bool beta;
+
+  /// Where beta builds keep the last readings; null in public builds.
+  final ScanLog? scanLog;
+  final Future<void> Function(Email email) _sendEmail;
+
+  /// Readings are kept: beta build and the tester agreed.
+  bool get keepsScans => beta && scanLog != null && _settings.keepScans == true;
   final DateTime Function() _clock;
   Locale _locale;
   String _dateLocale;
@@ -112,21 +148,26 @@ class AppState extends ChangeNotifier {
 
   Future<bool> requestReminderPermission() => _reminders.requestPermission();
 
-  /// Reschedules one at a time, so overlapping calls never mix plans.
+  /// Reschedules one at a time, so overlapping calls never mix plans. Never
+  /// fails: a reading or a setting is saved even if reminders can't be.
   Future<void> _reschedule() =>
-      _pendingReschedule = _pendingReschedule.catchError((_) {}).then((_) {
-        final l = l10n;
-        return _reminders.reschedule(
-          planReminders(
-            settings: _settings,
-            measurements: _measurements,
-            now: now(),
-            l10n: l,
-            dates: Dates(_dateLocale),
-          ),
-          channelName: l.reminderChannel,
-          channelDescription: l.reminderChannelDescription,
-        );
+      _pendingReschedule = _pendingReschedule.then((_) async {
+        try {
+          final l = l10n;
+          await _reminders.reschedule(
+            planReminders(
+              settings: _settings,
+              measurements: _measurements,
+              now: now(),
+              l10n: l,
+              dates: Dates(_dateLocale),
+            ),
+            channelName: l.reminderChannel,
+            channelDescription: l.reminderChannelDescription,
+          );
+        } catch (e, stack) {
+          debugPrint('Reminders not rescheduled: $e\n$stack');
+        }
       });
 
   String newId() => now().microsecondsSinceEpoch.toRadixString(36);
@@ -186,6 +227,32 @@ class AppState extends ChangeNotifier {
   Future<void> recordShare() =>
       updateSettings(_settings.copyWith(shares: [..._settings.shares, now()]));
 
+  /// The tester's answer about keeping readings; saying no (or turning it
+  /// off later) deletes the ones kept so far.
+  Future<void> setKeepScans(bool keep) async {
+    if (!keep) await scanLog?.clear();
+    await updateSettings(
+      _settings.copyWith(keepScans: keep),
+      reschedule: false,
+    );
+  }
+
+  /// Opens the mail app with the kept readings attached, addressed to the
+  /// developer: the tester sees the message and sends it.
+  Future<void> sendKeptScans() async {
+    final log = scanLog!;
+    final l = l10n;
+    final zip = await log.export();
+    await _sendEmail(
+      Email(
+        recipients: const [feedbackEmail],
+        subject: l.feedbackSubject(appVersion),
+        body: l.feedbackBody(await log.count()),
+        attachmentPaths: [zip.path],
+      ),
+    );
+  }
+
   Backup createBackup() => Backup(
     createdAt: now(),
     measurements: _measurements,
@@ -212,6 +279,7 @@ class AppState extends ChangeNotifier {
 
   /// Erases readings and settings: the app starts over from the welcome.
   Future<void> deleteAllData() async {
+    await scanLog?.clear();
     _measurements = [];
     _settings = const AppSettings();
     _invalidate();

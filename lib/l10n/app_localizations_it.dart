@@ -237,22 +237,22 @@ class AppLocalizationsIt extends AppLocalizations {
   String get latest => 'Ultima';
 
   @override
-  String get categoryNonElevated => 'Non elevata';
+  String get categoryNonElevated => 'Ottimale';
 
   @override
-  String get categoryElevated => 'Elevata';
+  String get categoryElevated => 'Intermedia';
 
   @override
   String get categoryHigh => 'Alta';
 
   @override
   String bandNonElevated(int sys, int dia) {
-    return 'Non elevata (sotto $sys/$dia)';
+    return 'Ottimale (sotto $sys/$dia)';
   }
 
   @override
   String bandElevated(int sysFrom, int sysTo, int diaFrom, int diaTo) {
-    return 'Elevata ($sysFrom–$sysTo / $diaFrom–$diaTo)';
+    return 'Intermedia ($sysFrom–$sysTo / $diaFrom–$diaTo)';
   }
 
   @override
@@ -269,6 +269,10 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get welcomeFeaturePhoto =>
       'Fotografi il display, i valori li scrive l’app';
+
+  @override
+  String get welcomeFeaturePhotoCopy =>
+      'Fotografi il display e copi i valori: presto li scriverà l’app da sola';
 
   @override
   String get welcomeFeatureReminder => 'Un promemoria nel giorno che scegli tu';
@@ -461,8 +465,136 @@ class AppLocalizationsIt extends AppLocalizations {
       'Siediti con la schiena appoggiata, riposa cinque minuti e misura al braccio con il bracciale all’altezza del cuore. Poi segna i valori qui: fascia, grafici e report si costruiscono da soli.';
 
   @override
-  String get scanPlaceholder =>
-      'La lettura dal display arriverà presto. Per ora inserisci i valori a mano.';
+  String get scanReadTitle => 'Letto dalla foto';
+
+  @override
+  String get photoCopyTitle => 'Copia i valori dal display';
+
+  @override
+  String scanPhotoNotSaved(String when) {
+    return '$when · la foto non viene salvata';
+  }
+
+  @override
+  String get scanRetake => 'Rifai';
+
+  @override
+  String get scanSure => 'Letto con sicurezza';
+
+  @override
+  String get scanUnsure =>
+      'Cifra poco nitida nella foto: confronta con il display e correggi se serve.';
+
+  @override
+  String get scanMissing => 'Non trovato nella foto: copialo dal display.';
+
+  @override
+  String get scanNothingRead =>
+      'Non riesco a leggere i valori: riprova evitando i riflessi, oppure inseriscili a mano.';
+
+  @override
+  String get scanTitle => 'Fotografa il display';
+
+  @override
+  String get scanFlash => 'Luce';
+
+  @override
+  String get scanFrameHint => 'Inquadra il display nella cornice';
+
+  @override
+  String get scanGlareHint => 'Evita i riflessi: inclina un poco il telefono';
+
+  @override
+  String get scanFromGallery => 'Da galleria';
+
+  @override
+  String get scanShutter => 'Scatta';
+
+  @override
+  String get scanReading => 'Leggo i valori…';
+
+  @override
+  String get scanCameraError =>
+      'Non riesco ad aprire la fotocamera. Riprova, oppure usa una foto dalla galleria.';
+
+  @override
+  String get scanCameraNeeded =>
+      'Per fotografare il display PressSure ha bisogno della fotocamera. La foto non viene salvata.';
+
+  @override
+  String get scanCameraBlocked =>
+      'Il permesso della fotocamera è stato negato. Attivalo nelle impostazioni dell’app, poi torna qui.';
+
+  @override
+  String get scanAllow => 'Consenti';
+
+  @override
+  String get scanOpenSettings => 'Apri impostazioni';
+
+  @override
+  String get betaTitle => 'Programma beta';
+
+  @override
+  String get keepScansTitle => 'Aiutami a migliorare la lettura';
+
+  @override
+  String keepScansBody(int count, String email) {
+    return 'Tiene su questo telefono le ultime $count foto del display, con i valori letti dall’app e quelli che salvi. Non parte nulla da solo: puoi inviarle tu per email a $email. Spegnendo, vengono cancellate.';
+  }
+
+  @override
+  String keptScansCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count letture tenute',
+      one: '1 lettura tenuta',
+      zero: 'Nessuna lettura tenuta',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendScans => 'Invia per analisi';
+
+  @override
+  String get clearScans => 'Cancella';
+
+  @override
+  String get scansCleared => 'Letture tenute cancellate';
+
+  @override
+  String get keepScansYes => 'Sì, tieni le letture';
+
+  @override
+  String get keepScansNo => 'No, grazie';
+
+  @override
+  String get noMailApp => 'Nessuna app di posta disponibile per l’invio.';
+
+  @override
+  String feedbackSubject(String version) {
+    return 'PressSure $version: letture del display';
+  }
+
+  @override
+  String feedbackBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count letture',
+      one: '1 lettura',
+    );
+    return 'In allegato $_temp0 del display fatte con PressSure: foto, valori letti dall’app e valori salvati.\n\nNote (facoltative):\n';
+  }
+
+  @override
+  String scanPhotoKept(String when) {
+    return '$when · la foto resta sul telefono per l’analisi';
+  }
+
+  @override
+  String get scanRetry => 'Riprova';
 
   @override
   String get entryNewTitle => 'Controlla e salva';
@@ -519,7 +651,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get whenManual => 'Inserita a mano';
 
   @override
-  String get scanTooltip => 'Leggi dal display (in arrivo)';
+  String get scanTooltip => 'Fotografa il display';
 
   @override
   String categoryHint(String category, String source) {
@@ -911,7 +1043,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get thresholdsErrOrder =>
-      'La fascia elevata deve stare sotto la soglia.';
+      'La fascia intermedia deve stare sotto la soglia.';
 
   @override
   String get reportScreenSubtitle =>
@@ -1357,7 +1489,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Predefinite: linee guida europee ESC 2024, misura a domicilio. Valgono per grafici, diario, traguardi ed esportazioni.';
 
   @override
-  String get elevatedFrom => 'Elevata da';
+  String get elevatedFrom => 'Intermedia da';
 
   @override
   String get aboveThresholdFrom => 'Sopra soglia da';
@@ -1402,7 +1534,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String restoreBody(String date, String readings) {
-    return 'Il diario su questo telefono viene sostituito da quello del backup del $date ($readings). Non si può annullare.';
+    return 'Diario, abitudine, promemoria e soglie su questo telefono vengono sostituiti da quelli del backup del $date ($readings). Non si può annullare.';
   }
 
   @override
@@ -1428,12 +1560,19 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String aboutBands(int elevSys, int elevDia, int highSys, int highDia) {
-    return 'Fasce predefinite per la misura a domicilio: non elevata sotto $elevSys/$elevDia, elevata da $elevSys/$elevDia, sopra soglia da $highSys/$highDia mmHg.';
+    return 'Fasce predefinite per la misura a domicilio: ottimale sotto $elevSys/$elevDia, intermedia da $elevSys/$elevDia (nelle linee guida «elevata»), sopra soglia da $highSys/$highDia mmHg.';
   }
 
   @override
   String get aboutSource =>
       'Fonte: 2024 ESC Guidelines for the management of elevated blood pressure and hypertension, European Heart Journal, 2024.';
+
+  @override
+  String get aboutCredits => 'Riconoscimenti';
+
+  @override
+  String get aboutModel =>
+      'La lettura del display usa un modello addestrato sul dataset «Blood-Pressure-monitor-digit-reader» di naphop (Roboflow Universe), licenza CC BY 4.0.';
 
   @override
   String get version => 'Versione';

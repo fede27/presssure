@@ -1,11 +1,15 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:presssure/app.dart';
 import 'package:presssure/l10n/l10n.dart';
 import 'package:presssure/models/measurement.dart';
 import 'package:presssure/models/settings.dart';
+import 'package:presssure/ocr/ocr_engine.dart';
+import 'package:presssure/ocr/scan_log.dart';
+import 'package:presssure/services/photo_source.dart';
 import 'package:presssure/services/reminders.dart';
 import 'package:presssure/services/repository.dart';
 import 'package:presssure/state/app_state.dart';
@@ -97,6 +101,11 @@ Future<AppState> makeState({
   AppSettings settings = onboardedSettings,
   DateTime? now,
   ReminderService? reminders,
+  OcrEngine? ocrEngine,
+  PhotoSource Function()? photoSource,
+  bool beta = false,
+  ScanLog? scanLog,
+  Future<void> Function(Email email)? sendEmail,
   Locale locale = const Locale('it'),
 }) async {
   SharedPreferences.setMockInitialValues({
@@ -107,6 +116,11 @@ Future<AppState> makeState({
   return AppState(
     repository: await Repository.open(),
     reminders: reminders ?? NoopReminderService(),
+    ocrEngine: ocrEngine,
+    photoSource: photoSource,
+    beta: beta,
+    scanLog: scanLog,
+    sendEmail: sendEmail,
     clock: () => clock,
     locale: locale,
   );
@@ -119,6 +133,11 @@ Future<AppState> pumpApp(
   List<Measurement> measurements = const [],
   AppSettings settings = onboardedSettings,
   DateTime? now,
+  OcrEngine? ocrEngine,
+  PhotoSource Function()? photoSource,
+  bool beta = false,
+  ScanLog? scanLog,
+  Future<void> Function(Email email)? sendEmail,
   Locale locale = const Locale('it', 'IT'),
 }) async {
   tester.view.physicalSize = const Size(1170, 6000);
@@ -130,6 +149,11 @@ Future<AppState> pumpApp(
     measurements: measurements,
     settings: settings,
     now: now,
+    ocrEngine: ocrEngine,
+    photoSource: photoSource,
+    beta: beta,
+    scanLog: scanLog,
+    sendEmail: sendEmail,
   );
   await tester.pumpWidget(PressSureApp(state: state));
   await tester.pumpAndSettle();

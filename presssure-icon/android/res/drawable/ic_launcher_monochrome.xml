@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PressSure · versione a una tinta per le icone a tema (Android 13+). Il sistema usa solo l'alfa: cuore pieno con la spunta scavata. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M54 80 C40 71 27 61.5 27 47 C27 38.2 33.7 31.5 42 31.5 C47.4 31.5 51.6 34.3 54 38.5 C56.4 34.3 60.6 31.5 66 31.5 C74.3 31.5 81 38.2 81 47 C81 61.5 68 71 54 80 Z M48.20,64.30 L48.70,64.71 L49.28,65.01 L49.90,65.19 L50.55,65.25 L51.19,65.17 L51.81,64.97 L52.38,64.65 L52.87,64.23 L68.87,47.23 L69.26,46.72 L69.54,46.15 L69.71,45.54 L69.75,44.90 L69.67,44.27 L69.46,43.67 L69.15,43.11 L68.73,42.63 L68.22,42.24 L67.65,41.96 L67.04,41.79 L66.40,41.75 L65.77,41.83 L65.17,42.04 L64.61,42.35 L64.13,42.77 L50.43,57.33 L44.30,51.20 L43.81,50.80 L43.24,50.50 L42.63,50.31 L42.00,50.25 L41.37,50.31 L40.76,50.50 L40.19,50.80 L39.70,51.20 L39.30,51.69 L39.00,52.26 L38.81,52.87 L38.75,53.50 L38.81,54.13 L39.00,54.74 L39.30,55.31 L39.70,55.80 Z" />
+</vector>

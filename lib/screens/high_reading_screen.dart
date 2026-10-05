@@ -197,6 +197,6 @@ class HighReadingScreen extends StatelessWidget {
   void _remeasure(BuildContext context) {
     final navigator = Navigator.of(context);
     navigator.popUntil((route) => route.isFirst);
-    openNewMeasurement(navigator.context);
+    openCamera(navigator.context);
   }
 }

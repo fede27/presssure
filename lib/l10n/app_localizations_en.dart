@@ -237,22 +237,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get latest => 'Latest';
 
   @override
-  String get categoryNonElevated => 'Not elevated';
+  String get categoryNonElevated => 'Optimal';
 
   @override
-  String get categoryElevated => 'Elevated';
+  String get categoryElevated => 'Intermediate';
 
   @override
   String get categoryHigh => 'High';
 
   @override
   String bandNonElevated(int sys, int dia) {
-    return 'Not elevated (below $sys/$dia)';
+    return 'Optimal (below $sys/$dia)';
   }
 
   @override
   String bandElevated(int sysFrom, int sysTo, int diaFrom, int diaTo) {
-    return 'Elevated ($sysFrom–$sysTo / $diaFrom–$diaTo)';
+    return 'Intermediate ($sysFrom–$sysTo / $diaFrom–$diaTo)';
   }
 
   @override
@@ -269,6 +269,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get welcomeFeaturePhoto =>
       'Snap the display, the app writes down the values';
+
+  @override
+  String get welcomeFeaturePhotoCopy =>
+      'Snap the display and copy the values: soon the app will write them by itself';
 
   @override
   String get welcomeFeatureReminder => 'A reminder on the day you choose';
@@ -461,8 +465,136 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sit with your back supported, rest for five minutes and measure on your arm with the cuff at heart level. Then log the values here: band, charts and reports build themselves.';
 
   @override
-  String get scanPlaceholder =>
-      'Reading from the display is coming soon. For now, enter the values by hand.';
+  String get scanReadTitle => 'Read from the photo';
+
+  @override
+  String get photoCopyTitle => 'Copy the values from the display';
+
+  @override
+  String scanPhotoNotSaved(String when) {
+    return '$when · the photo isn\'t saved';
+  }
+
+  @override
+  String get scanRetake => 'Retake';
+
+  @override
+  String get scanSure => 'Read with confidence';
+
+  @override
+  String get scanUnsure =>
+      'Blurry digit in the photo: compare with the display and fix it if needed.';
+
+  @override
+  String get scanMissing => 'Not found in the photo: copy it from the display.';
+
+  @override
+  String get scanNothingRead =>
+      'I can\'t read the values: try again avoiding reflections, or enter them by hand.';
+
+  @override
+  String get scanTitle => 'Photograph the display';
+
+  @override
+  String get scanFlash => 'Light';
+
+  @override
+  String get scanFrameHint => 'Fit the display inside the frame';
+
+  @override
+  String get scanGlareHint => 'Avoid reflections: tilt the phone slightly';
+
+  @override
+  String get scanFromGallery => 'From gallery';
+
+  @override
+  String get scanShutter => 'Take photo';
+
+  @override
+  String get scanReading => 'Reading the values…';
+
+  @override
+  String get scanCameraError =>
+      'I can\'t open the camera. Try again, or use a photo from the gallery.';
+
+  @override
+  String get scanCameraNeeded =>
+      'To photograph the display PressSure needs the camera. The photo isn\'t saved.';
+
+  @override
+  String get scanCameraBlocked =>
+      'Camera permission was denied. Turn it on in the app settings, then come back here.';
+
+  @override
+  String get scanAllow => 'Allow';
+
+  @override
+  String get scanOpenSettings => 'Open settings';
+
+  @override
+  String get betaTitle => 'Beta program';
+
+  @override
+  String get keepScansTitle => 'Help me improve the reading';
+
+  @override
+  String keepScansBody(int count, String email) {
+    return 'Keeps on this phone the last $count photos of the display, with the values the app read and the ones you save. Nothing leaves by itself: you can email them to $email. Turning it off deletes them.';
+  }
+
+  @override
+  String keptScansCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count readings kept',
+      one: '1 reading kept',
+      zero: 'No readings kept',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendScans => 'Send for analysis';
+
+  @override
+  String get clearScans => 'Delete';
+
+  @override
+  String get scansCleared => 'Kept readings deleted';
+
+  @override
+  String get keepScansYes => 'Yes, keep the readings';
+
+  @override
+  String get keepScansNo => 'No, thanks';
+
+  @override
+  String get noMailApp => 'No email app available to send them.';
+
+  @override
+  String feedbackSubject(String version) {
+    return 'PressSure $version: display readings';
+  }
+
+  @override
+  String feedbackBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count readings',
+      one: '1 reading',
+    );
+    return 'Attached, $_temp0 of the display taken with PressSure: photos, values read by the app and values saved.\n\nNotes (optional):\n';
+  }
+
+  @override
+  String scanPhotoKept(String when) {
+    return '$when · the photo stays on the phone for analysis';
+  }
+
+  @override
+  String get scanRetry => 'Try again';
 
   @override
   String get entryNewTitle => 'Check and save';
@@ -519,7 +651,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whenManual => 'Entered by hand';
 
   @override
-  String get scanTooltip => 'Read from the display (coming soon)';
+  String get scanTooltip => 'Photograph the display';
 
   @override
   String categoryHint(String category, String source) {
@@ -913,7 +1045,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get thresholdsErrOrder =>
-      'The elevated band must be below the threshold.';
+      'The intermediate band must be below the threshold.';
 
   @override
   String get reportScreenSubtitle =>
@@ -1358,7 +1490,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Default: European ESC 2024 guidelines, home measurement. They apply to charts, diary, achievements and exports.';
 
   @override
-  String get elevatedFrom => 'Elevated from';
+  String get elevatedFrom => 'Intermediate from';
 
   @override
   String get aboveThresholdFrom => 'Above threshold from';
@@ -1403,7 +1535,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String restoreBody(String date, String readings) {
-    return 'The diary on this phone is replaced by the backup from $date ($readings). This can\'t be undone.';
+    return 'The diary, habit, reminders and thresholds on this phone are replaced by those in the backup from $date ($readings). This can\'t be undone.';
   }
 
   @override
@@ -1429,12 +1561,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String aboutBands(int elevSys, int elevDia, int highSys, int highDia) {
-    return 'Default bands for home measurement: non-elevated below $elevSys/$elevDia, elevated from $elevSys/$elevDia, above threshold from $highSys/$highDia mmHg.';
+    return 'Default bands for home measurement: optimal below $elevSys/$elevDia, intermediate from $elevSys/$elevDia (“elevated” in the guidelines), above threshold from $highSys/$highDia mmHg.';
   }
 
   @override
   String get aboutSource =>
       'Source: 2024 ESC Guidelines for the management of elevated blood pressure and hypertension, European Heart Journal, 2024.';
+
+  @override
+  String get aboutCredits => 'Acknowledgements';
+
+  @override
+  String get aboutModel =>
+      'Reading the display uses a model trained on the “Blood-Pressure-monitor-digit-reader” dataset by naphop (Roboflow Universe), CC BY 4.0 licence.';
 
   @override
   String get version => 'Version';

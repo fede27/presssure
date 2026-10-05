@@ -43,7 +43,7 @@ class AppCard extends StatelessWidget {
   }
 }
 
-/// "Elevata", "Alta"... pill.
+/// "Intermedia", "Alta"... pill.
 class CategoryChip extends StatelessWidget {
   const CategoryChip(this.category, {super.key});
 
@@ -320,7 +320,8 @@ class SectionHeading extends StatelessWidget {
   }
 }
 
-/// App logo: rounded square with the pulse line.
+/// App logo, the same as the launcher icon (presssure-icon/source): a
+/// heart with a check on a peach rounded square.
 class LogoMark extends StatelessWidget {
   const LogoMark({super.key, this.size = 24});
 
@@ -335,25 +336,36 @@ class LogoMark extends StatelessWidget {
 class _LogoPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final s = size.width / 24;
+    // The icon is drawn on a 108 grid; launchers show the middle 72, and
+    // so does the logo.
+    const from = 18.0, span = 72.0;
+    final s = size.width / span;
     canvas.drawRRect(
-      RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(7 * s)),
-      Paint()..color = AppColors.primary,
+      RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(12 * s)),
+      Paint()..color = AppColors.orangeSoft,
     );
-    final path = Path()
-      ..moveTo(4 * s, 13 * s)
-      ..lineTo(7.5 * s, 13 * s)
-      ..lineTo(9.5 * s, 8 * s)
-      ..lineTo(12.5 * s, 17 * s)
-      ..lineTo(14.5 * s, 11 * s)
-      ..lineTo(16 * s, 13 * s)
-      ..lineTo(20 * s, 13 * s);
+    canvas.scale(s);
+    canvas.translate(-from, -from);
+    final heart = Path()
+      ..moveTo(54, 80)
+      ..cubicTo(40, 71, 27, 61.5, 27, 47)
+      ..cubicTo(27, 38.2, 33.7, 31.5, 42, 31.5)
+      ..cubicTo(47.4, 31.5, 51.6, 34.3, 54, 38.5)
+      ..cubicTo(56.4, 34.3, 60.6, 31.5, 66, 31.5)
+      ..cubicTo(74.3, 31.5, 81, 38.2, 81, 47)
+      ..cubicTo(81, 61.5, 68, 71, 54, 80)
+      ..close();
+    canvas.drawPath(heart, Paint()..color = AppColors.systolic);
+    final check = Path()
+      ..moveTo(42, 53.5)
+      ..lineTo(50.5, 62)
+      ..lineTo(66.5, 45);
     canvas.drawPath(
-      path,
+      check,
       Paint()
         ..color = Colors.white
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.9 * s
+        ..strokeWidth = 6.5
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round,
     );

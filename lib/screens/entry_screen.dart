@@ -6,27 +6,48 @@ import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
 import '../logic/bp_category.dart';
 import '../models/measurement.dart';
+import '../ocr/reading_parser.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
-import 'flows.dart';
 
 /// "04 · Controlla e salva": new reading or edit of an existing one.
 ///
-/// A new reading pops with its [SaveOutcome]; an edit pops with null.
+/// A new reading pops with its [SaveOutcome] (or [useCamera]); an edit pops
+/// with null.
 class EntryScreen extends StatefulWidget {
-  const EntryScreen({super.key, this.existing, this.initialDay});
+  const EntryScreen({
+    super.key,
+    this.existing,
+    this.initialDay,
+    this.scanned,
+    this.fromPhoto = false,
+  });
 
   final Measurement? existing;
 
   /// Pre-fills the date, e.g. when filling a skipped day from the diary.
   final DateTime? initialDay;
 
+  /// Values read from a photo of the display: pre-filled, each marked as
+  /// sure or to be checked against the display.
+  final ParsedReading? scanned;
+
+  /// A photo was taken but there is no engine to read it: the values are
+  /// copied from the display ("Rifai" takes another photo).
+  final bool fromPhoto;
+
+  /// Popped by the camera button: the caller opens the camera instead.
+  static const useCamera = #useCamera;
+
   @override
   State<EntryScreen> createState() => _EntryScreenState();
 }
 
 enum _SecondReading { none, waiting, ready }
+
+/// How a value pre-filled from a photo was read.
+enum _ScanMark { sure, unsure, missing }
 
 class _EntryScreenState extends State<EntryScreen> {
   final _sys = TextEditingController();
@@ -82,6 +103,12 @@ class _EntryScreenState extends State<EntryScreen> {
         _arm = last.arm;
         _posture = last.posture;
       }
+      final scanned = widget.scanned;
+      if (scanned != null) {
+        _sys.text = '${scanned.systolic.value}';
+        _dia.text = '${scanned.diastolic.value}';
+        _pulse.text = scanned.pulse?.value.toString() ?? '';
+      }
     }
     for (final c in [_sys, _dia, _pulse, _sys2, _dia2, _pulse2]) {
       c.addListener(() => setState(() {}));
@@ -98,6 +125,15 @@ class _EntryScreenState extends State<EntryScreen> {
   }
 
   int? _int(TextEditingController c) => int.tryParse(c.text.trim());
+
+  /// How a pre-filled field was read; none once the user changed it,
+  /// since then it was checked against the display.
+  _ScanMark? _mark(TextEditingController c, ReadValue? read) {
+    if (widget.scanned == null) return null;
+    if (c.text.trim() != (read?.value.toString() ?? '')) return null;
+    if (read == null) return _ScanMark.missing;
+    return read.isSure ? _ScanMark.sure : _ScanMark.unsure;
+  }
 
   String? _sysError(
     AppLocalizations l,
@@ -229,7 +265,9 @@ class _EntryScreenState extends State<EntryScreen> {
       arm: _arm,
       posture: _posture,
       note: _note.text.trim(),
-      source: base?.source ?? ReadingSource.manual,
+      source: widget.scanned != null
+          ? ReadingSource.photo
+          : base?.source ?? ReadingSource.manual,
       doubleReading: _secondFilled || (base?.doubleReading ?? false),
     );
     final outcome = await state.saveMeasurement(m);
@@ -288,12 +326,22 @@ class _EntryScreenState extends State<EntryScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
         children: [
-          _WhenCard(
-            takenAt: _takenAt,
-            now: state.now(),
-            onChange: _pickDateTime,
-            onScan: _editing ? null : () => showScanPlaceholder(context),
-          ),
+          if (widget.scanned != null || widget.fromPhoto)
+            _ScanSourceCard(
+              read: widget.scanned != null,
+              takenAt: _takenAt,
+              now: state.now(),
+              onRetake: () => Navigator.of(context).pop(),
+            )
+          else
+            _WhenCard(
+              takenAt: _takenAt,
+              now: state.now(),
+              onChange: _pickDateTime,
+              onScan: _editing || widget.initialDay != null
+                  ? null
+                  : () => Navigator.of(context).pop(EntryScreen.useCamera),
+            ),
           const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +352,8 @@ class _EntryScreenState extends State<EntryScreen> {
                   unit: 'mmHg',
                   controller: _sys,
                   error: _submitted ? _sysError(l, _sys, _dia) : null,
-                  autofocus: !_editing,
+                  mark: _mark(_sys, widget.scanned?.systolic),
+                  autofocus: !_editing && widget.scanned == null,
                 ),
               ),
               const SizedBox(width: 10),
@@ -314,6 +363,7 @@ class _EntryScreenState extends State<EntryScreen> {
                   unit: 'mmHg',
                   controller: _dia,
                   error: _submitted ? _diaError(l, _dia) : null,
+                  mark: _mark(_dia, widget.scanned?.diastolic),
                 ),
               ),
             ],
@@ -324,6 +374,7 @@ class _EntryScreenState extends State<EntryScreen> {
             unit: 'bpm',
             controller: _pulse,
             error: _submitted ? _pulseError(l, _pulse) : null,
+            mark: _mark(_pulse, widget.scanned?.pulse),
             size: 34,
             hint: l.optional,
           ),
@@ -587,6 +638,64 @@ class _WhenCard extends StatelessWidget {
   }
 }
 
+/// "Letto dalla foto · Oggi, 07:42 · la foto non viene salvata · Rifai".
+class _ScanSourceCard extends StatelessWidget {
+  const _ScanSourceCard({
+    required this.read,
+    required this.takenAt,
+    required this.now,
+    required this.onRetake,
+  });
+
+  /// Read by the engine; otherwise only taken, to copy the values.
+  final bool read;
+  final DateTime takenAt;
+  final DateTime now;
+  final VoidCallback onRetake;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return AppCard(
+      radius: 20,
+      padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
+      child: Row(
+        children: [
+          const IconTile(
+            icon: Icons.photo_camera_outlined,
+            background: AppColors.primarySoft,
+            foreground: AppColors.primary,
+            size: 48,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  read ? l.scanReadTitle : l.photoCopyTitle,
+                  style: AppText.body(14, weight: FontWeight.w800),
+                ),
+                Text(
+                  // Honest about the photo: kept only in beta builds, with
+                  // consent.
+                  AppScope.of(context).keepsScans
+                      ? l.scanPhotoKept(context.dates.relative(takenAt, now, l))
+                      : l.scanPhotoNotSaved(
+                          context.dates.relative(takenAt, now, l),
+                        ),
+                  style: AppText.body(13, color: AppColors.muted),
+                ),
+              ],
+            ),
+          ),
+          TextButton(onPressed: onRetake, child: Text(l.scanRetake)),
+        ],
+      ),
+    );
+  }
+}
+
 /// Large numeric input in a white box, as in the design.
 class _BigField extends StatelessWidget {
   const _BigField({
@@ -594,6 +703,7 @@ class _BigField extends StatelessWidget {
     required this.unit,
     required this.controller,
     this.error,
+    this.mark,
     this.size = 44,
     this.hint,
     this.autofocus = false,
@@ -603,20 +713,29 @@ class _BigField extends StatelessWidget {
   final String unit;
   final TextEditingController controller;
   final String? error;
+
+  /// For values read from a photo; errors take precedence.
+  final _ScanMark? mark;
   final double size;
   final String? hint;
   final bool autofocus;
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final hasError = error != null;
+    final check = !hasError && mark != null && mark != _ScanMark.sure;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       decoration: BoxDecoration(
-        color: hasError ? AppColors.warnBg : AppColors.surface,
+        color: hasError || check ? AppColors.warnBg : AppColors.surface,
         border: Border.all(
-          color: hasError ? AppColors.high : AppColors.borderStrong,
-          width: hasError ? 2 : 1.5,
+          color: hasError
+              ? AppColors.high
+              : check
+              ? AppColors.warnBorder
+              : AppColors.borderStrong,
+          width: hasError || check ? 2 : 1.5,
         ),
         borderRadius: BorderRadius.circular(20),
       ),
@@ -683,6 +802,37 @@ class _BigField extends StatelessWidget {
                 12,
                 weight: FontWeight.w700,
                 color: AppColors.high,
+              ),
+            )
+          else if (mark == _ScanMark.sure)
+            Row(
+              children: [
+                const Icon(
+                  Icons.check_rounded,
+                  size: 14,
+                  color: AppColors.greenOk,
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    l.scanSure,
+                    style: AppText.body(
+                      12,
+                      weight: FontWeight.w700,
+                      color: AppColors.greenOk,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else if (check)
+            Text(
+              mark == _ScanMark.unsure ? l.scanUnsure : l.scanMissing,
+              style: AppText.body(
+                12,
+                weight: FontWeight.w700,
+                height: 1.35,
+                color: AppColors.warn,
               ),
             ),
         ],

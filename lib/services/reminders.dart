@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
@@ -41,21 +42,61 @@ class NoopReminderService implements ReminderService {
   }) async => lastPlan = plan;
 }
 
+/// What [LocalNotificationReminderService] needs from the notification
+/// plugin; a fake in tests.
+abstract class NotificationBackend {
+  Future<void> init();
+
+  Future<bool> requestPermission();
+
+  /// Ids of the notifications scheduled and not shown yet.
+  Future<Set<int>> pendingIds();
+
+  /// Schedules [reminder], replacing the one with the same id.
+  Future<void> schedule(
+    PlannedReminder reminder, {
+    required String channelName,
+    required String channelDescription,
+  });
+
+  Future<void> cancel(int id);
+
+  /// When the scheduled reminders go off: the app wakes up shortly before
+  /// each one to bring it closer to its time (android ReminderHops.kt).
+  Future<void> keepOnTime(List<DateTime> times);
+}
+
+/// Keeps the scheduled notifications in line with the plan, so that one
+/// failure never leaves the user without reminders:
+/// - the new plan is scheduled before the old notifications are removed
+///   (same ids are replaced), never an empty gap in between;
+/// - each reminder is scheduled on its own: one refused does not stop the
+///   others;
+/// - times gone by while planning are skipped instead of failing;
+/// - if starting the plugin failed, it is tried again at the next plan.
+///
+/// Reminders are inexact (no special permission): Android may deliver them
+/// up to an hour late, unless [NotificationBackend.keepOnTime] brings them
+/// within about ten minutes.
 class LocalNotificationReminderService implements ReminderService {
-  final _plugin = FlutterLocalNotificationsPlugin();
+  LocalNotificationReminderService({
+    NotificationBackend? backend,
+    DateTime Function()? clock,
+  }) : _backend = backend ?? PluginNotificationBackend(),
+       _clock = clock ?? DateTime.now;
+
+  final NotificationBackend _backend;
+  final DateTime Function() _clock;
   bool _ready = false;
+
+  /// Scheduled by this service since the app started: what to remove if
+  /// the plugin can't list its pending notifications.
+  final _scheduled = <int>{};
 
   @override
   Future<void> init() async {
     try {
-      tzdata.initializeTimeZones();
-      final local = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(local.identifier));
-      await _plugin.initialize(
-        settings: const InitializationSettings(
-          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-        ),
-      );
+      await _backend.init();
       _ready = true;
     } catch (e) {
       debugPrint('Reminders unavailable: $e');
@@ -64,12 +105,14 @@ class LocalNotificationReminderService implements ReminderService {
 
   @override
   Future<bool> requestPermission() async {
+    if (!_ready) await init();
     if (!_ready) return false;
-    final android = _plugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
-    return await android?.requestNotificationsPermission() ?? true;
+    try {
+      return await _backend.requestPermission();
+    } catch (e) {
+      debugPrint('Notification permission not asked: $e');
+      return false;
+    }
   }
 
   @override
@@ -78,8 +121,100 @@ class LocalNotificationReminderService implements ReminderService {
     required String channelName,
     required String channelDescription,
   }) async {
+    if (!_ready) await init();
     if (!_ready) return;
-    final details = NotificationDetails(
+
+    final kept = <int>{};
+    for (final r in plan) {
+      if (!r.at.isAfter(_clock())) continue;
+      try {
+        await _backend.schedule(
+          r,
+          channelName: channelName,
+          channelDescription: channelDescription,
+        );
+        kept.add(r.id);
+      } catch (e) {
+        debugPrint('Reminder ${r.id} at ${r.at} not scheduled: $e');
+      }
+    }
+
+    // The previous plan's leftovers, including a reminder that failed now
+    // (its old time is no longer right).
+    Set<int> pending;
+    try {
+      pending = await _backend.pendingIds();
+    } catch (e) {
+      debugPrint('Pending reminders not listed: $e');
+      pending = {..._scheduled};
+    }
+    for (final id in pending.difference(kept)) {
+      try {
+        await _backend.cancel(id);
+      } catch (e) {
+        debugPrint('Reminder $id not cancelled: $e');
+      }
+    }
+    _scheduled
+      ..clear()
+      ..addAll(kept);
+
+    try {
+      await _backend.keepOnTime([
+        for (final r in plan)
+          if (kept.contains(r.id)) r.at,
+      ]);
+    } catch (e) {
+      debugPrint('Reminders not kept on time: $e');
+    }
+  }
+}
+
+/// flutter_local_notifications on Android.
+class PluginNotificationBackend implements NotificationBackend {
+  final _plugin = FlutterLocalNotificationsPlugin();
+
+  @override
+  Future<void> init() async {
+    tzdata.initializeTimeZones();
+    try {
+      final local = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(local.identifier));
+    } catch (e) {
+      // Reminders are scheduled as instants, so they still go off at the
+      // right time; only the zone name is missing.
+      debugPrint('Time zone unknown, reminders scheduled in UTC: $e');
+    }
+    await _plugin.initialize(
+      settings: const InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      ),
+    );
+  }
+
+  @override
+  Future<bool> requestPermission() async {
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    return await android?.requestNotificationsPermission() ?? true;
+  }
+
+  @override
+  Future<Set<int>> pendingIds() async => {
+    for (final r in await _plugin.pendingNotificationRequests()) r.id,
+  };
+
+  @override
+  Future<void> schedule(
+    PlannedReminder reminder, {
+    required String channelName,
+    required String channelDescription,
+  }) => _plugin.zonedSchedule(
+    id: reminder.id,
+    scheduledDate: tz.TZDateTime.from(reminder.at, tz.local),
+    notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
         'reminders',
         channelName,
@@ -87,17 +222,20 @@ class LocalNotificationReminderService implements ReminderService {
         importance: Importance.high,
         priority: Priority.high,
       ),
-    );
-    await _plugin.cancelAll();
-    for (final r in plan) {
-      await _plugin.zonedSchedule(
-        id: r.id,
-        scheduledDate: tz.TZDateTime.from(r.at, tz.local),
-        notificationDetails: details,
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        title: r.title,
-        body: r.body,
-      );
-    }
-  }
+    ),
+    androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    title: reminder.title,
+    body: reminder.body,
+  );
+
+  @override
+  Future<void> cancel(int id) => _plugin.cancel(id: id);
+
+  static const _channel = MethodChannel('presssure/reminders');
+
+  @override
+  Future<void> keepOnTime(List<DateTime> times) => _channel.invokeMethod(
+    'setTargets',
+    [for (final t in times) t.millisecondsSinceEpoch],
+  );
 }

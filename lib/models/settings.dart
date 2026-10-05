@@ -3,11 +3,13 @@ import 'json.dart';
 /// How often the user wants to measure.
 enum Frequency { daily, fewTimesWeek, weekly, biweekly, monthly }
 
-/// Values out of 40–250 mmHg, or the elevated band not below the threshold.
+/// Values out of 40–250 mmHg, or the intermediate band (ESC "elevated") not
+/// below the threshold.
 enum ThresholdsProblem { range, order }
 
 /// Home blood-pressure bands. Defaults follow the ESC 2024 guidelines for
-/// home measurement: elevated from 120/70, hypertension from 135/85.
+/// home measurement: intermediate (ESC "elevated") from 120/70, hypertension
+/// from 135/85.
 class Thresholds {
   const Thresholds({
     this.highSystolic = 135,
@@ -74,6 +76,7 @@ class AppSettings {
     this.shares = const [],
     this.backupReminder = true,
     this.lastBackup,
+    this.keepScans,
   });
 
   final bool onboarded;
@@ -98,6 +101,10 @@ class AppSettings {
   final bool backupReminder;
   final DateTime? lastBackup;
 
+  /// Beta builds: the tester agreed to keep the last readings for analysis;
+  /// null until asked.
+  final bool? keepScans;
+
   AppSettings copyWith({
     bool? onboarded,
     Frequency? frequency,
@@ -111,6 +118,7 @@ class AppSettings {
     List<DateTime>? shares,
     bool? backupReminder,
     DateTime? lastBackup,
+    bool? keepScans,
   }) {
     return AppSettings(
       onboarded: onboarded ?? this.onboarded,
@@ -125,6 +133,7 @@ class AppSettings {
       shares: shares ?? this.shares,
       backupReminder: backupReminder ?? this.backupReminder,
       lastBackup: lastBackup ?? this.lastBackup,
+      keepScans: keepScans ?? this.keepScans,
     );
   }
 
@@ -141,6 +150,7 @@ class AppSettings {
     'shares': shares.map((d) => d.toIso8601String()).toList(),
     'backupReminder': backupReminder,
     'lastBackup': lastBackup?.toIso8601String(),
+    'keepScans': keepScans,
   };
 
   factory AppSettings.fromJson(Map<String, Object?> json) {
@@ -172,6 +182,7 @@ class AppSettings {
           .toList(),
       backupReminder: json['backupReminder'] as bool? ?? true,
       lastBackup: lastBackup == null ? null : DateTime.parse(lastBackup),
+      keepScans: json['keepScans'] as bool?,
     );
   }
 }

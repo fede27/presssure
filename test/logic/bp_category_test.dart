@@ -39,14 +39,16 @@ void main() {
     expect(BpCategory.high.rangeLabel(itL10n, esc), 'Sopra soglia (135/85)');
     expect(
       BpCategory.elevated.rangeLabel(itL10n, esc),
-      'Elevata (120–134 / 70–84)',
+      'Intermedia (120–134 / 70–84)',
     );
     expect(
       BpCategory.nonElevated.rangeLabel(itL10n, esc),
-      'Non elevata (sotto 120/70)',
+      'Ottimale (sotto 120/70)',
     );
     expect(BpCategory.high.rangeLabel(enL10n, esc), 'Above threshold (135/85)');
-    expect(BpCategory.elevated.label(enL10n), 'Elevated');
-    expect(BpCategory.elevated.label(itL10n), 'Elevata');
+    expect(BpCategory.elevated.label(enL10n), 'Intermediate');
+    expect(BpCategory.nonElevated.label(enL10n), 'Optimal');
+    expect(BpCategory.elevated.label(itL10n), 'Intermedia');
+    expect(BpCategory.nonElevated.label(itL10n), 'Ottimale');
   });
 }
