@@ -1,0 +1,13 @@
+PressSure è un diario della pressione arteriosa: niente pubblicità, niente account.
+
+• Fotografi il display, i valori li scrive l’app. La lettura avviene sul telefono.
+• Un promemoria nel giorno che scegli tu, con un ritmo che riesci a mantenere.
+• Grafico dell’andamento e storico delle misurazioni.
+• Eventi: segni un cambio di abitudini e lo ritrovi sul grafico, per confrontare il prima e il dopo.
+• Traguardi e serie per mantenere l’abitudine.
+• Esporti in PDF o CSV quando ti serve e condividi il diario con chi vuoi.
+• I dati restano sul tuo telefono: niente account, niente server. Il backup è un file che salvi tu.
+
+PressSure è un diario personale: non è un dispositivo medico e non fa diagnosi. Le fasce predefinite seguono le linee guida europee ESC 2024 e puoi cambiarle.
+
+La lettura del display usa un modello addestrato sul dataset «Blood-Pressure-monitor-digit-reader» di naphop (Roboflow Universe), licenza CC BY 4.0.

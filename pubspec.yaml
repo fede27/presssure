@@ -79,7 +79,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # Seven-segment digit detector (tool/ocr_train; dataset CC BY 4.0).
+  # Seven-segment digit detector (tool/ocr_train): Ultralytics YOLO weights,
+  # AGPL-3.0; dataset CC BY 4.0.
   assets:
     - assets/models/
 

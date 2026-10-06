@@ -1,12 +1,12 @@
-// Screenshots for the Google Play listing, rendered from the app itself with
-// the design's sample diary (test/helpers.dart): same data, same pictures,
-// every time.
+// Screenshots for the store listing (F-Droid reads them from fastlane/),
+// rendered from the app itself with the design's sample diary
+// (test/helpers.dart): same data, same pictures, every time.
 //
 //   flutter test tool/store_screenshots/store_screenshots_test.dart
 //
-// Writes store_assets/screenshots/NN_name.png, 1080x1920 (9:16), without
-// status bar, frames or captions. Not under test/, so `flutter test` alone
-// does not rewrite them.
+// Writes fastlane/metadata/android/it-IT/images/phoneScreenshots/NN_name.png,
+// 1080x1920 (9:16), Italian UI, without status bar, frames or captions. Not
+// under test/, so `flutter test` alone does not rewrite them.
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -21,7 +21,7 @@ import 'package:presssure/screens/home_shell.dart';
 
 import '../../test/helpers.dart';
 
-const _outDir = 'store_assets/screenshots';
+const _outDir = 'fastlane/metadata/android/it-IT/images/phoneScreenshots';
 
 /// 1080x1920 on a 411x731 dp screen, a common phone size.
 const _size = Size(1080, 1920);

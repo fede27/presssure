@@ -80,5 +80,11 @@ flutter {
 dependencies {
     // Required by flutter_local_notifications for scheduled reminders.
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // TensorFlow Lite runtime for tflite_flutter, built from source without
+    // proprietary dependencies (https://github.com/egdels/LiteRT, Apache-2.0).
+    // Replaces Google's LiteRT AARs, excluded in ../build.gradle.kts. Not an
+    // official Google build: check the OCR benchmark (tool/ocr_bench) after
+    // every bump. Newer patch releases are listed on Maven Central.
+    implementation("de.schliweb:tensorflow-lite-fdroid:1.4.1-fdroid")
     testImplementation("junit:junit:4.13.2")
 }

@@ -1573,7 +1573,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aboutModel =>
-      'Reading the display uses a model trained on the “Blood-Pressure-monitor-digit-reader” dataset by naphop (Roboflow Universe), CC BY 4.0 licence.';
+      'Reading the display uses an Ultralytics YOLO model (AGPL-3.0 licence) trained on the “Blood-Pressure-monitor-digit-reader” dataset by naphop (Roboflow Universe), CC BY 4.0 licence. PressSure is free software under the AGPL-3.0 licence: the code is at github.com/fede27/presssure.';
 
   @override
   String get version => 'Version';

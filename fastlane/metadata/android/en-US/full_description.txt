@@ -1,0 +1,13 @@
+PressSure is a blood pressure diary: no ads, no account.
+
+• Snap the display, the app writes down the values. Reading happens on the phone.
+• A reminder on the day you choose, at a pace you can keep.
+• Trend chart and history of your readings.
+• Events: note a change in your habits and find it on the chart, to compare before and after.
+• Achievements and streaks to keep the habit going.
+• Export to PDF or CSV whenever you need and share the diary with whoever you want.
+• Your data stays on your phone: no account, no server. The backup is a file you save yourself.
+
+PressSure is a personal diary: it is not a medical device and does not diagnose. The default bands follow the European ESC 2024 guidelines and you can change them.
+
+Reading the display uses a model trained on the “Blood-Pressure-monitor-digit-reader” dataset by naphop (Roboflow Universe), CC BY 4.0 licence.

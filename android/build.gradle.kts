@@ -29,6 +29,18 @@ subprojects {
     }
 }
 
+// F-Droid: the LiteRT AARs that tflite_flutter pulls from Google Maven carry
+// references to a proprietary Play library (com.google.android.play:ai-delivery).
+// They only ship the native runtime (the plugin's Kotlin never imports them), so
+// they are dropped everywhere and the app adds a build compiled from source
+// instead (see dependencies in app/build.gradle.kts). No GPU delegate: the
+// engine runs on the CPU (lib/ocr/seg7_engine.dart).
+subprojects {
+    configurations.all {
+        exclude(group = "com.google.ai.edge.litert")
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
