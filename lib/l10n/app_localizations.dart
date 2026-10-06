@@ -2532,7 +2532,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAllBody.
   ///
   /// In en, this message translates to:
-  /// **'Readings, habit and settings are erased from this phone. Without a backup they can\'t be recovered.'**
+  /// **'Readings, events, habit and settings are erased from this phone. Without a backup they can\'t be recovered.'**
   String get deleteAllBody;
 
   /// No description provided for @deleteAllConfirm.
@@ -2552,6 +2552,538 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save a copy of your diary wherever you like: Settings › Your data.'**
   String get backupReminderBody;
+
+  /// No description provided for @eventCategoryLifeWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Life and work'**
+  String get eventCategoryLifeWork;
+
+  /// No description provided for @eventCategoryDiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Diet'**
+  String get eventCategoryDiet;
+
+  /// No description provided for @eventCategoryActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical activity'**
+  String get eventCategoryActivity;
+
+  /// No description provided for @eventCategoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get eventCategoryOther;
+
+  /// No description provided for @eventsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 event} other{{count} events}}'**
+  String eventsCount(int count);
+
+  /// No description provided for @eventButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Event'**
+  String get eventButton;
+
+  /// No description provided for @filterEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Events'**
+  String get filterEvents;
+
+  /// No description provided for @diarySubtitleEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'{readings} · {events} since {month} · {schedule}'**
+  String diarySubtitleEvents(
+    String readings,
+    String events,
+    String month,
+    String schedule,
+  );
+
+  /// No description provided for @monthSummaryEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'{readings} · average {avg} · {events}'**
+  String monthSummaryEvents(String readings, String avg, String events);
+
+  /// No description provided for @diaryEventKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Event · {category}'**
+  String diaryEventKind(String category);
+
+  /// No description provided for @diaryEventSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Event on {date}: {title}. Edit'**
+  String diaryEventSemantics(String date, String title);
+
+  /// No description provided for @eventNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New event'**
+  String get eventNew;
+
+  /// No description provided for @eventEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit event'**
+  String get eventEdit;
+
+  /// No description provided for @eventKindQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'What kind of change?'**
+  String get eventKindQuestion;
+
+  /// No description provided for @eventKindRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the kind of change.'**
+  String get eventKindRequired;
+
+  /// No description provided for @eventTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'What changed'**
+  String get eventTitleLabel;
+
+  /// No description provided for @eventTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'E.g. new job, less salt, moving house…'**
+  String get eventTitleHint;
+
+  /// No description provided for @eventTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Write in a few words what changed.'**
+  String get eventTitleRequired;
+
+  /// No description provided for @eventDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Since when'**
+  String get eventDateLabel;
+
+  /// No description provided for @eventToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today · {date}'**
+  String eventToday(String date);
+
+  /// No description provided for @eventPickDay.
+  ///
+  /// In en, this message translates to:
+  /// **'From which day?'**
+  String get eventPickDay;
+
+  /// No description provided for @eventNoteOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'(optional)'**
+  String get eventNoteOptional;
+
+  /// No description provided for @eventNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'E.g. what changed in practice'**
+  String get eventNoteHint;
+
+  /// No description provided for @eventChartSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Line in the chart'**
+  String get eventChartSwitch;
+
+  /// No description provided for @eventChartSwitchSub.
+  ///
+  /// In en, this message translates to:
+  /// **'In Trends, with the average before and after'**
+  String get eventChartSwitchSub;
+
+  /// No description provided for @eventPdfSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'In the PDF for the doctor'**
+  String get eventPdfSwitch;
+
+  /// No description provided for @eventPdfSwitchSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Listed and shown on the chart'**
+  String get eventPdfSwitchSub;
+
+  /// No description provided for @eventAddToDiary.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to diary'**
+  String get eventAddToDiary;
+
+  /// No description provided for @eventDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete event'**
+  String get eventDelete;
+
+  /// No description provided for @eventDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this event?'**
+  String get eventDeleteTitle;
+
+  /// No description provided for @eventDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your readings stay as they are. Only the diary entry and the line in the chart go away.'**
+  String get eventDeleteBody;
+
+  /// No description provided for @eventDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Event deleted'**
+  String get eventDeleted;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @eventsCompareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Average of the readings before and after each event'**
+  String get eventsCompareTitle;
+
+  /// No description provided for @windowTwoWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'2 weeks'**
+  String get windowTwoWeeks;
+
+  /// No description provided for @windowTwoWeeksShort.
+  ///
+  /// In en, this message translates to:
+  /// **'2 wks'**
+  String get windowTwoWeeksShort;
+
+  /// No description provided for @windowOneMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'1 month'**
+  String get windowOneMonth;
+
+  /// No description provided for @windowTwoMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'2 months'**
+  String get windowTwoMonths;
+
+  /// No description provided for @windowThreeMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'3 months'**
+  String get windowThreeMonths;
+
+  /// No description provided for @impactBeforeShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{window, select, twoWeeks{2 weeks before} oneMonth{Month before} twoMonths{2 months before} other{3 months before}} · {count}'**
+  String impactBeforeShort(String window, int count);
+
+  /// No description provided for @impactAfterShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{window, select, twoWeeks{2 weeks after} oneMonth{Month after} twoMonths{2 months after} other{3 months after}} · {count}'**
+  String impactAfterShort(String window, int count);
+
+  /// No description provided for @impactSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Before and after: from {before} to {after}, difference {delta}'**
+  String impactSemantics(String before, String after, String delta);
+
+  /// No description provided for @impactMissingBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 reading is missing in the period before ({days}).} other{{count} readings are missing in the period before ({days}).}}'**
+  String impactMissingBefore(int count, String days);
+
+  /// No description provided for @impactMissingAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 reading is missing in the period after ({days}).} other{{count} readings are missing in the period after ({days}).}}'**
+  String impactMissingAfter(int count, String days);
+
+  /// No description provided for @eventsFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'The number next to “before” and “after” is how many readings make up the average. Averages show whether your readings changed, not why.'**
+  String get eventsFootnote;
+
+  /// No description provided for @eventsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No events yet'**
+  String get eventsEmptyTitle;
+
+  /// No description provided for @eventsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Note a change in your life, like a new job, less salt or more exercise: you will see whether your readings changed around that date.'**
+  String get eventsEmptyBody;
+
+  /// No description provided for @impactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before and after'**
+  String get impactTitle;
+
+  /// No description provided for @impactEventLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Event {number} · {date} · {category}'**
+  String impactEventLine(int number, String date, String category);
+
+  /// No description provided for @impactPeriodGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Period before and after the event'**
+  String get impactPeriodGroup;
+
+  /// No description provided for @impactBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Before'**
+  String get impactBefore;
+
+  /// No description provided for @impactAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'After'**
+  String get impactAfter;
+
+  /// No description provided for @impactAverages.
+  ///
+  /// In en, this message translates to:
+  /// **'Averages compared'**
+  String get impactAverages;
+
+  /// No description provided for @impactDelta.
+  ///
+  /// In en, this message translates to:
+  /// **'Difference of the averages'**
+  String get impactDelta;
+
+  /// No description provided for @impactChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Readings around the event'**
+  String get impactChartTitle;
+
+  /// No description provided for @impactChartSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Before: {before}. After: {after}.'**
+  String impactChartSemantics(String before, String after);
+
+  /// No description provided for @impactPeriodAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'{readings}, average {avg}'**
+  String impactPeriodAverage(String readings, String avg);
+
+  /// No description provided for @legendPeriodAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Period average'**
+  String get legendPeriodAverage;
+
+  /// No description provided for @legendThresholdValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Threshold {sys}/{dia}'**
+  String legendThresholdValue(int sys, int dia);
+
+  /// No description provided for @impactDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'In detail'**
+  String get impactDetail;
+
+  /// No description provided for @impactAvgSystolic.
+  ///
+  /// In en, this message translates to:
+  /// **'Average systolic'**
+  String get impactAvgSystolic;
+
+  /// No description provided for @impactAvgDiastolic.
+  ///
+  /// In en, this message translates to:
+  /// **'Average diastolic'**
+  String get impactAvgDiastolic;
+
+  /// No description provided for @impactAbove.
+  ///
+  /// In en, this message translates to:
+  /// **'Readings above {sys}/{dia}'**
+  String impactAbove(int sys, int dia);
+
+  /// No description provided for @impactOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'Other events fall in the same period: {events}.'**
+  String impactOthers(String events);
+
+  /// No description provided for @impactOngoing.
+  ///
+  /// In en, this message translates to:
+  /// **'The period after is still running: it ends on {date}.'**
+  String impactOngoing(String date);
+
+  /// No description provided for @impactFewReadings.
+  ///
+  /// In en, this message translates to:
+  /// **'Few readings to compare: the averages say little.'**
+  String get impactFewReadings;
+
+  /// No description provided for @impactNoAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'No readings after the event yet: the comparison fills in with the next ones.'**
+  String get impactNoAfter;
+
+  /// No description provided for @impactCaution.
+  ///
+  /// In en, this message translates to:
+  /// **'The comparison shows whether your readings changed around this date, not why: other things may have counted in the same period.'**
+  String get impactCaution;
+
+  /// No description provided for @impactMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple average of the readings recorded in each period. Readings taken on the day of the event count as “after”.'**
+  String get impactMethod;
+
+  /// No description provided for @compareBeforeAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare before and after'**
+  String get compareBeforeAfter;
+
+  /// No description provided for @legendEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Event'**
+  String get legendEvent;
+
+  /// No description provided for @legendBeforeAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Month before / after'**
+  String get legendBeforeAfter;
+
+  /// No description provided for @eventsInPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Events in this period'**
+  String get eventsInPeriod;
+
+  /// No description provided for @eventsList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get eventsList;
+
+  /// No description provided for @chartEventSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Event {number}: {title}, {date}'**
+  String chartEventSemantics(int number, String title, String date);
+
+  /// No description provided for @chooseEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose event'**
+  String get chooseEvent;
+
+  /// No description provided for @noEventsInRange.
+  ///
+  /// In en, this message translates to:
+  /// **'No events with a chart line in this period. Add one from the Diary.'**
+  String get noEventsInRange;
+
+  /// No description provided for @chartEventsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Events: {events}.'**
+  String chartEventsDescription(String events);
+
+  /// No description provided for @newSinceEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'{readings} and {events} new since then'**
+  String newSinceEvents(String readings, String events);
+
+  /// No description provided for @rangeLabelEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} – {to} · {readings} · {events}'**
+  String rangeLabelEvents(
+    String from,
+    String to,
+    String readings,
+    String events,
+  );
+
+  /// No description provided for @includeEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Annotated events ({count})'**
+  String includeEvents(int count);
+
+  /// No description provided for @includeEventsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Lines on the chart and a list with averages before and after'**
+  String get includeEventsSub;
+
+  /// No description provided for @eventsPdfNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The PDF only includes the events where “In the PDF for the doctor” is on.'**
+  String get eventsPdfNote;
+
+  /// No description provided for @reportEventsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Annotated events'**
+  String get reportEventsTitle;
+
+  /// No description provided for @reportEventsCompare.
+  ///
+  /// In en, this message translates to:
+  /// **'Month before → after'**
+  String get reportEventsCompare;
+
+  /// No description provided for @reportEventsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Noted by the patient. Simple averages of the month before and the month after: they show whether the readings changed, not why.'**
+  String get reportEventsNote;
+
+  /// No description provided for @reportFooterEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'* with a note. Bands and {sys}/{dia} mmHg threshold: {source}. Values and events entered by the user, by hand or from a photo of the display. PressSure is a personal diary, not a medical device.'**
+  String reportFooterEvents(int sys, int dia, String source);
 }
 
 class _AppLocalizationsDelegate

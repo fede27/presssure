@@ -34,6 +34,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
   ReportData _data(AppState state) => ReportData.build(
     measurements: state.measurements,
+    events: state.events,
     settings: state.settings,
     range: _range,
     now: state.now(),
@@ -141,6 +142,10 @@ class _ReportScreenState extends State<ReportScreen> {
     final newSince = lastShare == null
         ? 0
         : state.measurements.where((m) => m.takenAt.isAfter(lastShare)).length;
+    // Events have no time: those dated after the last export.
+    final newEvents = lastShare == null
+        ? 0
+        : state.events.where((e) => e.day.isAfter(lastShare)).length;
     final canExport = !data.isEmpty && !_busy;
 
     return SafeArea(
@@ -197,7 +202,12 @@ class _ReportScreenState extends State<ReportScreen> {
                       ),
                       if (lastShare != null)
                         Text(
-                          l.newSince(newSince),
+                          newEvents == 0
+                              ? l.newSince(newSince)
+                              : l.newSinceEvents(
+                                  l.readingsCount(newSince),
+                                  l.eventsCount(newEvents),
+                                ),
                           style: AppText.body(13, color: AppColors.ink2),
                         ),
                     ],
@@ -260,9 +270,34 @@ class _ReportScreenState extends State<ReportScreen> {
                   _options.notes,
                   (v) => setState(() => _options = _options.copyWith(notes: v)),
                 ),
+                if (data.events.isNotEmpty)
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _options.events,
+                    onChanged: (v) =>
+                        setState(() => _options = _options.copyWith(events: v)),
+                    title: Text(
+                      l.includeEvents(data.events.length),
+                      style: AppText.body(15),
+                    ),
+                    subtitle: Text(
+                      l.includeEventsSub,
+                      style: AppText.body(13, color: AppColors.muted),
+                    ),
+                  ),
               ],
             ),
           ),
+          if (state.events.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                l.eventsPdfNote,
+                style: AppText.body(12, height: 1.4, color: AppColors.muted),
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
           Row(
             children: [
@@ -328,6 +363,7 @@ class _PreviewCard extends StatelessWidget {
       (l.previewAverage, data.overall?.toString() ?? '–'),
       (l.previewLast4, data.lastFour?.toString() ?? '–'),
       (l.aboveThreshold, '${data.highCount}'),
+      if (data.events.isNotEmpty) (l.filterEvents, '${data.events.length}'),
     ];
     return AppCard(
       padding: const EdgeInsets.all(14),

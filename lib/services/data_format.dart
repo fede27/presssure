@@ -1,7 +1,8 @@
 /// Versioning of the saved data, shared by the storage on the phone and by
 /// the backup files, so that both can be read after the app changes.
 ///
-/// The data is a JSON document `{"measurements": [...], "settings": {...}}`.
+/// The data is a JSON document
+/// `{"measurements": [...], "events": [...], "settings": {...}}`.
 ///
 /// - Adding an optional field needs nothing: older data lacks it and gets
 ///   the default, older apps ignore it.
@@ -14,11 +15,18 @@ typedef DataDocument = Map<String, Object?>;
 typedef DataMigration = DataDocument Function(DataDocument doc);
 
 /// Version of the data written by this app.
-const dataVersion = 1;
+///
+/// 2: life events ("events"). A new list, not an optional field: an older
+/// app restoring a backup would drop the events without a word, so it has
+/// to refuse it as too new instead.
+const dataVersion = 2;
 
 /// `dataMigrations[n]` upgrades a document from version n to n + 1.
-const dataMigrations = <int, DataMigration>{
-  // 1: _v1ToV2,
+const dataMigrations = <int, DataMigration>{1: _v1ToV2};
+
+DataDocument _v1ToV2(DataDocument doc) => {
+  ...doc,
+  'events': doc['events'] ?? <Object?>[],
 };
 
 /// The data comes from a newer app, which may have changed its meaning.

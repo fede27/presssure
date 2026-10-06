@@ -10,6 +10,7 @@ import '../ocr/reading_parser.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/seven_segment.dart';
 
 /// "04 · Controlla e salva": new reading or edit of an existing one.
 ///
@@ -329,6 +330,7 @@ class _EntryScreenState extends State<EntryScreen> {
           if (widget.scanned != null || widget.fromPhoto)
             _ScanSourceCard(
               read: widget.scanned != null,
+              reading: widget.scanned,
               takenAt: _takenAt,
               now: state.now(),
               onRetake: () => Navigator.of(context).pop(),
@@ -642,6 +644,7 @@ class _WhenCard extends StatelessWidget {
 class _ScanSourceCard extends StatelessWidget {
   const _ScanSourceCard({
     required this.read,
+    this.reading,
     required this.takenAt,
     required this.now,
     required this.onRetake,
@@ -649,6 +652,9 @@ class _ScanSourceCard extends StatelessWidget {
 
   /// Read by the engine; otherwise only taken, to copy the values.
   final bool read;
+
+  /// What was read, shown on a small display; the camera icon otherwise.
+  final ParsedReading? reading;
   final DateTime takenAt;
   final DateTime now;
   final VoidCallback onRetake;
@@ -661,12 +667,18 @@ class _ScanSourceCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
       child: Row(
         children: [
-          const IconTile(
-            icon: Icons.photo_camera_outlined,
-            background: AppColors.primarySoft,
-            foreground: AppColors.primary,
-            size: 48,
-          ),
+          if (reading case final r?)
+            MiniDisplay(
+              systolic: r.systolic.value,
+              diastolic: r.diastolic.value,
+            )
+          else
+            const IconTile(
+              icon: Icons.photo_camera_outlined,
+              background: AppColors.primarySoft,
+              foreground: AppColors.primary,
+              size: 48,
+            ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

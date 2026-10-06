@@ -3,14 +3,32 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
+import '../logic/event_impact.dart';
 import '../logic/schedule.dart';
 import '../logic/stats.dart';
 import '../models/measurement.dart';
 import '../models/settings.dart';
 import '../theme.dart';
+import 'event_widgets.dart';
+
+/// An event drawn on the chart: a vertical line with its number on top.
+class ChartEvent {
+  const ChartEvent({
+    required this.id,
+    required this.day,
+    required this.number,
+    required this.semanticLabel,
+  });
+
+  final String id;
+  final DateTime day;
+  final int number;
+  final String semanticLabel;
+}
 
 /// Systolic and diastolic readings over time, with the rolling average of the
-/// last 4, the thresholds and the skipped periods.
+/// last 4, the thresholds and the skipped periods; optionally the events,
+/// with the month before and after the selected one shaded.
 class BpChart extends StatelessWidget {
   const BpChart({
     super.key,
@@ -23,6 +41,9 @@ class BpChart extends StatelessWidget {
     this.height = 244,
     this.periodDays = 7,
     this.highlightLabel,
+    this.events = const [],
+    this.selectedEvent,
+    this.onEventTap,
   });
 
   /// Oldest first.
@@ -42,6 +63,18 @@ class BpChart extends StatelessWidget {
   /// Label of the latest-reading tooltip; "Ultima" by default.
   final String? highlightLabel;
 
+  /// Events in the range, with their numbers; none by default.
+  final List<ChartEvent> events;
+
+  /// Id of the event whose month before and after is shaded.
+  final String? selectedEvent;
+  final ValueChanged<String>? onEventTap;
+
+  /// Room above the plot for the event numbers.
+  static const eventsInset = 28.0;
+  static const _left = 34.0;
+  static const _right = 8.0;
+
   String _description(AppLocalizations l, Dates dates) {
     if (items.isEmpty) return l.noReadingsInPeriod;
     final first = items.first;
@@ -60,12 +93,13 @@ class BpChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final dates = context.dates;
-    return Semantics(
+    final withEvents = events.isNotEmpty && !compact;
+    final chart = Semantics(
       label: _description(l, dates),
       image: true,
       excludeSemantics: true,
       child: SizedBox(
-        height: height,
+        height: height + (withEvents ? eventsInset : 0),
         width: double.infinity,
         child: CustomPaint(
           painter: _BpChartPainter(
@@ -76,8 +110,50 @@ class BpChart extends StatelessWidget {
         ),
       ),
     );
+    if (!withEvents) return chart;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final plotW = constraints.maxWidth - _left - _right;
+        final fromMs = from.millisecondsSinceEpoch;
+        final spanMs = math.max(1, to.millisecondsSinceEpoch - fromMs);
+        double x(DateTime d) =>
+            _left + (d.millisecondsSinceEpoch - fromMs) / spanMs * plotW;
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            chart,
+            for (final e in events)
+              Positioned(
+                left: x(e.day) - 22,
+                top: -8,
+                width: 44,
+                height: 44,
+                child: Semantics(
+                  button: true,
+                  selected: e.id == selectedEvent,
+                  label: e.semanticLabel,
+                  excludeSemantics: true,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onEventTap == null ? null : () => onEventTap!(e.id),
+                    child: Center(
+                      child: EventNumberDot(
+                        e.number,
+                        selected: e.id == selectedEvent,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 }
+
+/// Shade of the month before and after the selected event.
+const eventShade = Color(0xFFE3EEEF);
 
 class _BpChartPainter extends CustomPainter {
   _BpChartPainter(this.chart, this.highlightLabel, this.monthLabel);
@@ -134,9 +210,10 @@ class _BpChartPainter extends CustomPainter {
     final items = chart.items;
     final t = chart.thresholds;
     final compact = chart.compact;
-    final left = compact ? 4.0 : 34.0;
-    final right = compact ? 8.0 : 8.0;
-    final top = compact ? 6.0 : 12.0;
+    final withEvents = chart.events.isNotEmpty && !compact;
+    final left = compact ? 4.0 : BpChart._left;
+    final right = BpChart._right;
+    final top = (compact ? 6.0 : 12.0) + (withEvents ? BpChart.eventsInset : 0);
     final bottom = compact ? 6.0 : 28.0;
     final plotW = size.width - left - right;
     final plotH = size.height - top - bottom;
@@ -161,6 +238,19 @@ class _BpChartPainter extends CustomPainter {
     double x(DateTime d) =>
         left + (d.millisecondsSinceEpoch - fromMs) / spanMs * plotW;
     double y(num v) => top + (maxV - v) / (maxV - minV) * plotH;
+
+    // The month before and after the selected event.
+    final selected = withEvents
+        ? chart.events.where((e) => e.id == chart.selectedEvent).firstOrNull
+        : null;
+    if (selected != null) {
+      final x0 = x(addMonths(selected.day, -1)).clamp(left, left + plotW);
+      final x1 = x(addMonths(selected.day, 1)).clamp(left, left + plotW);
+      canvas.drawRect(
+        Rect.fromLTRB(x0, top, x1, top + plotH),
+        Paint()..color = eventShade,
+      );
+    }
 
     // Skipped periods.
     if (!compact) {
@@ -219,6 +309,24 @@ class _BpChartPainter extends CustomPainter {
             fontVariations: const [FontVariation.weight(800)],
           ),
         );
+      }
+    }
+
+    // Events: the selected one solid, the others dashed.
+    if (withEvents) {
+      for (final e in chart.events) {
+        final ex = x(e.day);
+        final on = e.id == chart.selectedEvent;
+        final paint = Paint()
+          ..color = on
+              ? AppColors.primary
+              : AppColors.ink.withValues(alpha: 0.5)
+          ..strokeWidth = on ? 2 : 1.2;
+        final a = Offset(ex, top - 16);
+        final b = Offset(ex, top + plotH);
+        on
+            ? canvas.drawLine(a, b, paint)
+            : _dashed(canvas, a, b, paint, dash: 3, gap: 3);
       }
     }
 

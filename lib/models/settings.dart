@@ -77,6 +77,7 @@ class AppSettings {
     this.backupReminder = true,
     this.lastBackup,
     this.keepScans,
+    this.eventsInChart = false,
   });
 
   final bool onboarded;
@@ -105,6 +106,10 @@ class AppSettings {
   /// null until asked.
   final bool? keepScans;
 
+  /// Events shown in the "Andamento" chart: off until the user turns them
+  /// on, then remembered.
+  final bool eventsInChart;
+
   AppSettings copyWith({
     bool? onboarded,
     Frequency? frequency,
@@ -119,6 +124,7 @@ class AppSettings {
     bool? backupReminder,
     DateTime? lastBackup,
     bool? keepScans,
+    bool? eventsInChart,
   }) {
     return AppSettings(
       onboarded: onboarded ?? this.onboarded,
@@ -134,6 +140,7 @@ class AppSettings {
       backupReminder: backupReminder ?? this.backupReminder,
       lastBackup: lastBackup ?? this.lastBackup,
       keepScans: keepScans ?? this.keepScans,
+      eventsInChart: eventsInChart ?? this.eventsInChart,
     );
   }
 
@@ -151,6 +158,7 @@ class AppSettings {
     'backupReminder': backupReminder,
     'lastBackup': lastBackup?.toIso8601String(),
     'keepScans': keepScans,
+    'eventsInChart': eventsInChart,
   };
 
   factory AppSettings.fromJson(Map<String, Object?> json) {
@@ -183,6 +191,7 @@ class AppSettings {
       backupReminder: json['backupReminder'] as bool? ?? true,
       lastBackup: lastBackup == null ? null : DateTime.parse(lastBackup),
       keepScans: json['keepScans'] as bool?,
+      eventsInChart: json['eventsInChart'] as bool? ?? false,
     );
   }
 }

@@ -8,6 +8,7 @@ import '../logic/bp_category.dart';
 import '../logic/reminder_plan.dart';
 import '../logic/schedule.dart';
 import '../logic/stats.dart';
+import '../models/life_event.dart';
 import '../models/measurement.dart';
 import '../models/settings.dart';
 import '../ocr/corpus.dart';
@@ -55,6 +56,7 @@ class AppState extends ChangeNotifier {
        newPhotoSource = photoSource ?? CameraPhotoSource.new,
        _sendEmail = sendEmail ?? FlutterEmailSender.send {
     _measurements = sortedByDate(_repository.loadMeasurements());
+    _events = sortedEvents(_repository.loadEvents());
     _settings = _repository.loadSettings();
   }
 
@@ -87,6 +89,7 @@ class AppState extends ChangeNotifier {
   Future<void> _pendingReschedule = Future.value();
 
   late List<Measurement> _measurements;
+  late List<LifeEvent> _events;
   late AppSettings _settings;
   HabitTracker? _tracker;
   AchievementsReport? _achievements;
@@ -98,6 +101,9 @@ class AppState extends ChangeNotifier {
   AppSettings get settings => _settings;
   Thresholds get thresholds => _settings.thresholds;
   Measurement? get latest => _measurements.lastOrNull;
+
+  /// Oldest first.
+  List<LifeEvent> get events => List.unmodifiable(_events);
 
   Schedule get schedule => Schedule.fromSettings(_settings);
 
@@ -207,6 +213,26 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Adds an event, or replaces the one with the same id.
+  Future<void> saveEvent(LifeEvent e) async {
+    _events = sortedEvents([..._events.where((x) => x.id != e.id), e]);
+    await _repository.saveEvents(_events);
+    notifyListeners();
+  }
+
+  /// Removes the event; returns it, so that it can be put back (undo).
+  Future<LifeEvent?> deleteEvent(String id) async {
+    final removed = _events.where((e) => e.id == id).firstOrNull;
+    _events = _events.where((e) => e.id != id).toList();
+    await _repository.saveEvents(_events);
+    notifyListeners();
+    return removed;
+  }
+
+  /// The "Eventi" switch of the "Andamento" chart, remembered.
+  Future<void> setEventsInChart(bool on) =>
+      updateSettings(_settings.copyWith(eventsInChart: on), reschedule: false);
+
   Future<void> updateSettings(
     AppSettings settings, {
     bool reschedule = true,
@@ -256,6 +282,7 @@ class AppState extends ChangeNotifier {
   Backup createBackup() => Backup(
     createdAt: now(),
     measurements: _measurements,
+    events: _events,
     settings: _settings,
   );
 
@@ -266,24 +293,28 @@ class AppState extends ChangeNotifier {
   /// Replaces the diary and the settings with the ones in [backup].
   Future<void> restoreBackup(Backup backup) async {
     _measurements = sortedByDate(backup.measurements);
+    _events = sortedEvents(backup.events);
     _settings = backup.settings.copyWith(
       onboarded: true,
       lastBackup: backup.createdAt,
     );
     _invalidate();
     await _repository.saveMeasurements(_measurements);
+    await _repository.saveEvents(_events);
     await _repository.saveSettings(_settings);
     await _reschedule();
     notifyListeners();
   }
 
-  /// Erases readings and settings: the app starts over from the welcome.
+  /// Erases readings, events and settings: the app starts over from the welcome.
   Future<void> deleteAllData() async {
     await scanLog?.clear();
     _measurements = [];
+    _events = [];
     _settings = const AppSettings();
     _invalidate();
     await _repository.saveMeasurements(_measurements);
+    await _repository.saveEvents(_events);
     await _repository.saveSettings(_settings);
     await _reschedule();
     notifyListeners();

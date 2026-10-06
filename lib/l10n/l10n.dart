@@ -68,6 +68,9 @@ class Dates {
   /// 27 settembre 2026 / September 27, 2026.
   String fullDate(DateTime d) => DateFormat.yMMMMd(locale).format(d);
 
+  /// mercoledì 1 luglio 2026 / Wednesday, July 1, 2026.
+  String weekdayFullDate(DateTime d) => DateFormat.yMMMMEEEEd(locale).format(d);
+
   /// 27/9/2026 / 9/27/2026.
   String numericDate(DateTime d) => DateFormat.yMd(locale).format(d);
 
@@ -89,6 +92,18 @@ class Dates {
   /// Full weekday name, for accessibility labels.
   String weekdayLong(int weekday) =>
       DateFormat.EEEE(locale).format(_dayOfWeek(weekday));
+
+  /// "1 – 30 giugno" / "June 1 – 30" within a month, otherwise
+  /// "1 aprile – 30 giugno" / "April 1 – June 30".
+  String dayRange(DateTime from, DateTime to) {
+    if (from.year != to.year || from.month != to.month) {
+      return '${dayMonth(from)} – ${dayMonth(to)}';
+    }
+    final dayFirst = dayMonth(DateTime(2000, 1, 15)).startsWith('15');
+    return dayFirst
+        ? '${from.day} – ${dayMonth(to)}'
+        : '${dayMonth(from)} – ${to.day}';
+  }
 
   /// apr – giu / Apr – Jun.
   String monthRange(DateTime from, DateTime to) =>

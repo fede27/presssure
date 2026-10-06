@@ -5,11 +5,13 @@ import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:presssure/app.dart';
 import 'package:presssure/l10n/l10n.dart';
+import 'package:presssure/models/life_event.dart';
 import 'package:presssure/models/measurement.dart';
 import 'package:presssure/models/settings.dart';
 import 'package:presssure/ocr/ocr_engine.dart';
 import 'package:presssure/ocr/scan_log.dart';
 import 'package:presssure/services/photo_source.dart';
+import 'package:presssure/services/data_format.dart';
 import 'package:presssure/services/reminders.dart';
 import 'package:presssure/services/repository.dart';
 import 'package:presssure/state/app_state.dart';
@@ -87,6 +89,29 @@ List<Measurement> designReadings({bool includeToday = false}) {
   return list;
 }
 
+/// The events of the design ("14 · Diario: solo eventi").
+List<LifeEvent> designEvents() => [
+  LifeEvent(
+    id: 'e1',
+    day: DateTime(2026, 5, 18),
+    category: EventCategory.diet,
+    title: 'Meno sale a tavola',
+  ),
+  LifeEvent(
+    id: 'e2',
+    day: DateTime(2026, 7, 1),
+    category: EventCategory.lifeWork,
+    title: 'Nuovo lavoro vicino a casa',
+    note: 'Niente più due ore di auto al giorno.',
+  ),
+  LifeEvent(
+    id: 'e3',
+    day: DateTime(2026, 8, 24),
+    category: EventCategory.activity,
+    title: 'Camminata ogni giorno',
+  ),
+];
+
 const onboardedSettings = AppSettings(onboarded: true);
 
 /// Italian texts and dates, as most tests expect.
@@ -98,6 +123,7 @@ final enDates = Dates('en_US');
 /// Prepares shared preferences with the given data and returns the state.
 Future<AppState> makeState({
   List<Measurement> measurements = const [],
+  List<LifeEvent> events = const [],
   AppSettings settings = onboardedSettings,
   DateTime? now,
   ReminderService? reminders,
@@ -111,6 +137,8 @@ Future<AppState> makeState({
   SharedPreferences.setMockInitialValues({
     'measurements.v1': jsonEncode(measurements.map((m) => m.toJson()).toList()),
     'settings.v1': jsonEncode(settings.toJson()),
+    'events': jsonEncode(events.map((e) => e.toJson()).toList()),
+    'dataVersion': dataVersion,
   });
   final clock = now ?? designNow;
   return AppState(
@@ -131,6 +159,7 @@ Future<AppState> makeState({
 Future<AppState> pumpApp(
   WidgetTester tester, {
   List<Measurement> measurements = const [],
+  List<LifeEvent> events = const [],
   AppSettings settings = onboardedSettings,
   DateTime? now,
   OcrEngine? ocrEngine,
@@ -147,6 +176,7 @@ Future<AppState> pumpApp(
   addTearDown(tester.platformDispatcher.clearLocalesTestValue);
   final state = await makeState(
     measurements: measurements,
+    events: events,
     settings: settings,
     now: now,
     ocrEngine: ocrEngine,

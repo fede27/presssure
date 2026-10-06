@@ -1,15 +1,16 @@
 import 'dart:convert';
 
+import '../models/life_event.dart';
 import '../models/measurement.dart';
 import '../models/settings.dart';
 import 'data_format.dart';
 
 /// The whole diary as one JSON file, to move it to another phone or keep a
-/// copy: readings and settings, nothing else.
+/// copy: readings, events and settings, nothing else.
 ///
 /// ```json
-/// {"app": "presssure", "version": 1, "createdAt": "…",
-///  "measurements": [...], "settings": {...}}
+/// {"app": "presssure", "version": 2, "createdAt": "…",
+///  "measurements": [...], "events": [...], "settings": {...}}
 /// ```
 ///
 /// `version` is the [dataVersion]: older backups are migrated on restore,
@@ -18,6 +19,7 @@ class Backup {
   const Backup({
     required this.createdAt,
     required this.measurements,
+    this.events = const [],
     required this.settings,
   });
 
@@ -25,6 +27,7 @@ class Backup {
 
   final DateTime createdAt;
   final List<Measurement> measurements;
+  final List<LifeEvent> events;
   final AppSettings settings;
 
   String encode() => const JsonEncoder.withIndent(' ').convert({
@@ -32,6 +35,7 @@ class Backup {
     'version': dataVersion,
     'createdAt': createdAt.toIso8601String(),
     'measurements': measurements.map((m) => m.toJson()).toList(),
+    'events': events.map((e) => e.toJson()).toList(),
     'settings': settings.toJson(),
   });
 
@@ -51,6 +55,7 @@ class Backup {
     }
     final doc = migrateData({
       'measurements': json['measurements'],
+      'events': json['events'],
       'settings': json['settings'],
     }, version);
     try {
@@ -58,6 +63,9 @@ class Backup {
         createdAt: DateTime.parse(json['createdAt'] as String),
         measurements: (doc['measurements'] as List)
             .map((m) => Measurement.fromJson((m as Map).cast()))
+            .toList(),
+        events: ((doc['events'] as List?) ?? const [])
+            .map((e) => LifeEvent.fromJson((e as Map).cast()))
             .toList(),
         settings: AppSettings.fromJson(
           (doc['settings'] as Map).cast<String, Object?>(),

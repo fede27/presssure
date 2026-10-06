@@ -1648,7 +1648,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get deleteAllBody =>
-      'Misure, abitudine e impostazioni vengono eliminate da questo telefono. Senza un backup non si possono recuperare.';
+      'Misure, eventi, abitudine e impostazioni vengono eliminate da questo telefono. Senza un backup non si possono recuperare.';
 
   @override
   String get deleteAllConfirm => 'Cancella tutto';
@@ -1659,4 +1659,365 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get backupReminderBody =>
       'Salva una copia del diario dove preferisci: Impostazioni › I tuoi dati.';
+
+  @override
+  String get eventCategoryLifeWork => 'Vita e lavoro';
+
+  @override
+  String get eventCategoryDiet => 'Alimentazione';
+
+  @override
+  String get eventCategoryActivity => 'Attività fisica';
+
+  @override
+  String get eventCategoryOther => 'Altro';
+
+  @override
+  String eventsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count eventi',
+      one: '1 evento',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get eventButton => 'Evento';
+
+  @override
+  String get filterEvents => 'Eventi';
+
+  @override
+  String diarySubtitleEvents(
+    String readings,
+    String events,
+    String month,
+    String schedule,
+  ) {
+    return '$readings · $events da $month · $schedule';
+  }
+
+  @override
+  String monthSummaryEvents(String readings, String avg, String events) {
+    return '$readings · media $avg · $events';
+  }
+
+  @override
+  String diaryEventKind(String category) {
+    return 'Evento · $category';
+  }
+
+  @override
+  String diaryEventSemantics(String date, String title) {
+    return 'Evento del $date: $title. Modifica';
+  }
+
+  @override
+  String get eventNew => 'Nuovo evento';
+
+  @override
+  String get eventEdit => 'Modifica evento';
+
+  @override
+  String get eventKindQuestion => 'Che tipo di cambiamento?';
+
+  @override
+  String get eventKindRequired => 'Scegli il tipo di cambiamento.';
+
+  @override
+  String get eventTitleLabel => 'Cosa è cambiato';
+
+  @override
+  String get eventTitleHint => 'Es. nuovo lavoro, meno sale, trasloco…';
+
+  @override
+  String get eventTitleRequired => 'Scrivi in poche parole cosa è cambiato.';
+
+  @override
+  String get eventDateLabel => 'Da quando';
+
+  @override
+  String eventToday(String date) {
+    return 'Oggi · $date';
+  }
+
+  @override
+  String get eventPickDay => 'Da quale giorno?';
+
+  @override
+  String get eventNoteOptional => '(facoltativa)';
+
+  @override
+  String get eventNoteHint => 'Es. cosa è cambiato in concreto';
+
+  @override
+  String get eventChartSwitch => 'Linea nel grafico';
+
+  @override
+  String get eventChartSwitchSub => 'In Andamento, con la media prima e dopo';
+
+  @override
+  String get eventPdfSwitch => 'Nel PDF per il medico';
+
+  @override
+  String get eventPdfSwitchSub => 'Compare nell’elenco e sul grafico';
+
+  @override
+  String get eventAddToDiary => 'Aggiungi al diario';
+
+  @override
+  String get eventDelete => 'Elimina evento';
+
+  @override
+  String get eventDeleteTitle => 'Eliminare questo evento?';
+
+  @override
+  String get eventDeleteBody =>
+      'Le misure restano come sono. Spariscono solo la voce nel diario e la linea nell’andamento.';
+
+  @override
+  String get eventDeleted => 'Evento eliminato';
+
+  @override
+  String get undo => 'Annulla';
+
+  @override
+  String get eventsCompareTitle =>
+      'Media delle misure prima e dopo ogni evento';
+
+  @override
+  String get windowTwoWeeks => '2 settimane';
+
+  @override
+  String get windowTwoWeeksShort => '2 sett.';
+
+  @override
+  String get windowOneMonth => '1 mese';
+
+  @override
+  String get windowTwoMonths => '2 mesi';
+
+  @override
+  String get windowThreeMonths => '3 mesi';
+
+  @override
+  String impactBeforeShort(String window, int count) {
+    String _temp0 = intl.Intl.selectLogic(window, {
+      'twoWeeks': '2 settimane prima',
+      'oneMonth': 'Mese prima',
+      'twoMonths': '2 mesi prima',
+      'other': '3 mesi prima',
+    });
+    return '$_temp0 · $count';
+  }
+
+  @override
+  String impactAfterShort(String window, int count) {
+    String _temp0 = intl.Intl.selectLogic(window, {
+      'twoWeeks': '2 settimane dopo',
+      'oneMonth': 'Mese dopo',
+      'twoMonths': '2 mesi dopo',
+      'other': '3 mesi dopo',
+    });
+    return '$_temp0 · $count';
+  }
+
+  @override
+  String impactSemantics(String before, String after, String delta) {
+    return 'Prima e dopo: da $before a $after, differenza $delta';
+  }
+
+  @override
+  String impactMissingBefore(int count, String days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Nel periodo prima mancano $count misure ($days).',
+      one: 'Nel periodo prima manca 1 misura ($days).',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String impactMissingAfter(int count, String days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Nel periodo dopo mancano $count misure ($days).',
+      one: 'Nel periodo dopo manca 1 misura ($days).',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get eventsFootnote =>
+      'Il numero accanto a “prima” e “dopo” è quante misure entrano nella media. Le medie mostrano se le misure sono cambiate, non il perché.';
+
+  @override
+  String get eventsEmptyTitle => 'Nessun evento, per ora';
+
+  @override
+  String get eventsEmptyBody =>
+      'Annota un cambiamento nella tua vita, come un nuovo lavoro, meno sale o più movimento: vedrai se le misure sono cambiate intorno a quella data.';
+
+  @override
+  String get impactTitle => 'Prima e dopo';
+
+  @override
+  String impactEventLine(int number, String date, String category) {
+    return 'Evento $number · $date · $category';
+  }
+
+  @override
+  String get impactPeriodGroup => 'Periodo prima e dopo l’evento';
+
+  @override
+  String get impactBefore => 'Prima';
+
+  @override
+  String get impactAfter => 'Dopo';
+
+  @override
+  String get impactAverages => 'Medie a confronto';
+
+  @override
+  String get impactDelta => 'Differenza delle medie';
+
+  @override
+  String get impactChartTitle => 'Le misure intorno all’evento';
+
+  @override
+  String impactChartSemantics(String before, String after) {
+    return 'Prima: $before. Dopo: $after.';
+  }
+
+  @override
+  String impactPeriodAverage(String readings, String avg) {
+    return '$readings, media $avg';
+  }
+
+  @override
+  String get legendPeriodAverage => 'Media del periodo';
+
+  @override
+  String legendThresholdValue(int sys, int dia) {
+    return 'Soglia $sys/$dia';
+  }
+
+  @override
+  String get impactDetail => 'Nel dettaglio';
+
+  @override
+  String get impactAvgSystolic => 'Sistolica media';
+
+  @override
+  String get impactAvgDiastolic => 'Diastolica media';
+
+  @override
+  String impactAbove(int sys, int dia) {
+    return 'Misure sopra $sys/$dia';
+  }
+
+  @override
+  String impactOthers(String events) {
+    return 'Nel periodo ci sono anche altri eventi: $events.';
+  }
+
+  @override
+  String impactOngoing(String date) {
+    return 'Il periodo dopo è ancora in corso: si chiude il $date.';
+  }
+
+  @override
+  String get impactFewReadings =>
+      'Poche misure da confrontare: le medie dicono poco.';
+
+  @override
+  String get impactNoAfter =>
+      'Ancora nessuna misura dopo l’evento: il confronto si riempie con le prossime.';
+
+  @override
+  String get impactCaution =>
+      'Il confronto mostra se le misure sono cambiate intorno a questa data, non il perché: nello stesso periodo possono aver contato anche altri fattori.';
+
+  @override
+  String get impactMethod =>
+      'Media semplice delle misure registrate in ciascun periodo. Le misure del giorno dell’evento contano nel “dopo”.';
+
+  @override
+  String get compareBeforeAfter => 'Confronta prima e dopo';
+
+  @override
+  String get legendEvent => 'Evento';
+
+  @override
+  String get legendBeforeAfter => 'Mese prima / dopo';
+
+  @override
+  String get eventsInPeriod => 'Eventi nel periodo';
+
+  @override
+  String get eventsList => 'Elenco';
+
+  @override
+  String chartEventSemantics(int number, String title, String date) {
+    return 'Evento $number: $title, $date';
+  }
+
+  @override
+  String get chooseEvent => 'Scegli evento';
+
+  @override
+  String get noEventsInRange =>
+      'Nessun evento con la linea nel grafico in questo periodo. Aggiungine uno dal Diario.';
+
+  @override
+  String chartEventsDescription(String events) {
+    return 'Eventi: $events.';
+  }
+
+  @override
+  String newSinceEvents(String readings, String events) {
+    return '$readings e $events nuovi da allora';
+  }
+
+  @override
+  String rangeLabelEvents(
+    String from,
+    String to,
+    String readings,
+    String events,
+  ) {
+    return '$from – $to · $readings · $events';
+  }
+
+  @override
+  String includeEvents(int count) {
+    return 'Eventi annotati ($count)';
+  }
+
+  @override
+  String get includeEventsSub =>
+      'Linee sul grafico ed elenco con le medie prima e dopo';
+
+  @override
+  String get eventsPdfNote =>
+      'Nel PDF entrano solo gli eventi per cui hai lasciato attivo “Nel PDF per il medico”.';
+
+  @override
+  String get reportEventsTitle => 'Eventi annotati';
+
+  @override
+  String get reportEventsCompare => 'Mese prima → dopo';
+
+  @override
+  String get reportEventsNote =>
+      'Annotati dal paziente. Medie semplici del mese prima e del mese dopo: indicano se le misure sono cambiate, non il perché.';
+
+  @override
+  String reportFooterEvents(int sys, int dia, String source) {
+    return '* con nota. Fasce e soglia $sys/$dia mmHg: $source. Valori ed eventi inseriti dall\'utente, a mano o dalla foto del display. PressSure è un diario personale, non un dispositivo medico.';
+  }
 }

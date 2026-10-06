@@ -192,6 +192,7 @@ class ChoicePill extends StatelessWidget {
     required this.onTap,
     this.showCheck = false,
     this.minHeight = 44,
+    this.icon,
   });
 
   final String label;
@@ -199,6 +200,9 @@ class ChoicePill extends StatelessWidget {
   final VoidCallback onTap;
   final bool showCheck;
   final double minHeight;
+
+  /// Before the label, e.g. the flag of the "Eventi" filter.
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -230,6 +234,14 @@ class ChoicePill extends StatelessWidget {
                       Icons.check_rounded,
                       size: 16,
                       color: Colors.white,
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  if (icon != null) ...[
+                    Icon(
+                      icon,
+                      size: 16,
+                      color: selected ? Colors.white : AppColors.ink,
                     ),
                     const SizedBox(width: 6),
                   ],

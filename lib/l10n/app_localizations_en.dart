@@ -1648,7 +1648,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAllBody =>
-      'Readings, habit and settings are erased from this phone. Without a backup they can\'t be recovered.';
+      'Readings, events, habit and settings are erased from this phone. Without a backup they can\'t be recovered.';
 
   @override
   String get deleteAllConfirm => 'Delete everything';
@@ -1659,4 +1659,366 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backupReminderBody =>
       'Save a copy of your diary wherever you like: Settings › Your data.';
+
+  @override
+  String get eventCategoryLifeWork => 'Life and work';
+
+  @override
+  String get eventCategoryDiet => 'Diet';
+
+  @override
+  String get eventCategoryActivity => 'Physical activity';
+
+  @override
+  String get eventCategoryOther => 'Other';
+
+  @override
+  String eventsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count events',
+      one: '1 event',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get eventButton => 'Event';
+
+  @override
+  String get filterEvents => 'Events';
+
+  @override
+  String diarySubtitleEvents(
+    String readings,
+    String events,
+    String month,
+    String schedule,
+  ) {
+    return '$readings · $events since $month · $schedule';
+  }
+
+  @override
+  String monthSummaryEvents(String readings, String avg, String events) {
+    return '$readings · average $avg · $events';
+  }
+
+  @override
+  String diaryEventKind(String category) {
+    return 'Event · $category';
+  }
+
+  @override
+  String diaryEventSemantics(String date, String title) {
+    return 'Event on $date: $title. Edit';
+  }
+
+  @override
+  String get eventNew => 'New event';
+
+  @override
+  String get eventEdit => 'Edit event';
+
+  @override
+  String get eventKindQuestion => 'What kind of change?';
+
+  @override
+  String get eventKindRequired => 'Choose the kind of change.';
+
+  @override
+  String get eventTitleLabel => 'What changed';
+
+  @override
+  String get eventTitleHint => 'E.g. new job, less salt, moving house…';
+
+  @override
+  String get eventTitleRequired => 'Write in a few words what changed.';
+
+  @override
+  String get eventDateLabel => 'Since when';
+
+  @override
+  String eventToday(String date) {
+    return 'Today · $date';
+  }
+
+  @override
+  String get eventPickDay => 'From which day?';
+
+  @override
+  String get eventNoteOptional => '(optional)';
+
+  @override
+  String get eventNoteHint => 'E.g. what changed in practice';
+
+  @override
+  String get eventChartSwitch => 'Line in the chart';
+
+  @override
+  String get eventChartSwitchSub =>
+      'In Trends, with the average before and after';
+
+  @override
+  String get eventPdfSwitch => 'In the PDF for the doctor';
+
+  @override
+  String get eventPdfSwitchSub => 'Listed and shown on the chart';
+
+  @override
+  String get eventAddToDiary => 'Add to diary';
+
+  @override
+  String get eventDelete => 'Delete event';
+
+  @override
+  String get eventDeleteTitle => 'Delete this event?';
+
+  @override
+  String get eventDeleteBody =>
+      'Your readings stay as they are. Only the diary entry and the line in the chart go away.';
+
+  @override
+  String get eventDeleted => 'Event deleted';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get eventsCompareTitle =>
+      'Average of the readings before and after each event';
+
+  @override
+  String get windowTwoWeeks => '2 weeks';
+
+  @override
+  String get windowTwoWeeksShort => '2 wks';
+
+  @override
+  String get windowOneMonth => '1 month';
+
+  @override
+  String get windowTwoMonths => '2 months';
+
+  @override
+  String get windowThreeMonths => '3 months';
+
+  @override
+  String impactBeforeShort(String window, int count) {
+    String _temp0 = intl.Intl.selectLogic(window, {
+      'twoWeeks': '2 weeks before',
+      'oneMonth': 'Month before',
+      'twoMonths': '2 months before',
+      'other': '3 months before',
+    });
+    return '$_temp0 · $count';
+  }
+
+  @override
+  String impactAfterShort(String window, int count) {
+    String _temp0 = intl.Intl.selectLogic(window, {
+      'twoWeeks': '2 weeks after',
+      'oneMonth': 'Month after',
+      'twoMonths': '2 months after',
+      'other': '3 months after',
+    });
+    return '$_temp0 · $count';
+  }
+
+  @override
+  String impactSemantics(String before, String after, String delta) {
+    return 'Before and after: from $before to $after, difference $delta';
+  }
+
+  @override
+  String impactMissingBefore(int count, String days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count readings are missing in the period before ($days).',
+      one: '1 reading is missing in the period before ($days).',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String impactMissingAfter(int count, String days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count readings are missing in the period after ($days).',
+      one: '1 reading is missing in the period after ($days).',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get eventsFootnote =>
+      'The number next to “before” and “after” is how many readings make up the average. Averages show whether your readings changed, not why.';
+
+  @override
+  String get eventsEmptyTitle => 'No events yet';
+
+  @override
+  String get eventsEmptyBody =>
+      'Note a change in your life, like a new job, less salt or more exercise: you will see whether your readings changed around that date.';
+
+  @override
+  String get impactTitle => 'Before and after';
+
+  @override
+  String impactEventLine(int number, String date, String category) {
+    return 'Event $number · $date · $category';
+  }
+
+  @override
+  String get impactPeriodGroup => 'Period before and after the event';
+
+  @override
+  String get impactBefore => 'Before';
+
+  @override
+  String get impactAfter => 'After';
+
+  @override
+  String get impactAverages => 'Averages compared';
+
+  @override
+  String get impactDelta => 'Difference of the averages';
+
+  @override
+  String get impactChartTitle => 'Readings around the event';
+
+  @override
+  String impactChartSemantics(String before, String after) {
+    return 'Before: $before. After: $after.';
+  }
+
+  @override
+  String impactPeriodAverage(String readings, String avg) {
+    return '$readings, average $avg';
+  }
+
+  @override
+  String get legendPeriodAverage => 'Period average';
+
+  @override
+  String legendThresholdValue(int sys, int dia) {
+    return 'Threshold $sys/$dia';
+  }
+
+  @override
+  String get impactDetail => 'In detail';
+
+  @override
+  String get impactAvgSystolic => 'Average systolic';
+
+  @override
+  String get impactAvgDiastolic => 'Average diastolic';
+
+  @override
+  String impactAbove(int sys, int dia) {
+    return 'Readings above $sys/$dia';
+  }
+
+  @override
+  String impactOthers(String events) {
+    return 'Other events fall in the same period: $events.';
+  }
+
+  @override
+  String impactOngoing(String date) {
+    return 'The period after is still running: it ends on $date.';
+  }
+
+  @override
+  String get impactFewReadings =>
+      'Few readings to compare: the averages say little.';
+
+  @override
+  String get impactNoAfter =>
+      'No readings after the event yet: the comparison fills in with the next ones.';
+
+  @override
+  String get impactCaution =>
+      'The comparison shows whether your readings changed around this date, not why: other things may have counted in the same period.';
+
+  @override
+  String get impactMethod =>
+      'Simple average of the readings recorded in each period. Readings taken on the day of the event count as “after”.';
+
+  @override
+  String get compareBeforeAfter => 'Compare before and after';
+
+  @override
+  String get legendEvent => 'Event';
+
+  @override
+  String get legendBeforeAfter => 'Month before / after';
+
+  @override
+  String get eventsInPeriod => 'Events in this period';
+
+  @override
+  String get eventsList => 'List';
+
+  @override
+  String chartEventSemantics(int number, String title, String date) {
+    return 'Event $number: $title, $date';
+  }
+
+  @override
+  String get chooseEvent => 'Choose event';
+
+  @override
+  String get noEventsInRange =>
+      'No events with a chart line in this period. Add one from the Diary.';
+
+  @override
+  String chartEventsDescription(String events) {
+    return 'Events: $events.';
+  }
+
+  @override
+  String newSinceEvents(String readings, String events) {
+    return '$readings and $events new since then';
+  }
+
+  @override
+  String rangeLabelEvents(
+    String from,
+    String to,
+    String readings,
+    String events,
+  ) {
+    return '$from – $to · $readings · $events';
+  }
+
+  @override
+  String includeEvents(int count) {
+    return 'Annotated events ($count)';
+  }
+
+  @override
+  String get includeEventsSub =>
+      'Lines on the chart and a list with averages before and after';
+
+  @override
+  String get eventsPdfNote =>
+      'The PDF only includes the events where “In the PDF for the doctor” is on.';
+
+  @override
+  String get reportEventsTitle => 'Annotated events';
+
+  @override
+  String get reportEventsCompare => 'Month before → after';
+
+  @override
+  String get reportEventsNote =>
+      'Noted by the patient. Simple averages of the month before and the month after: they show whether the readings changed, not why.';
+
+  @override
+  String reportFooterEvents(int sys, int dia, String source) {
+    return '* with a note. Bands and $sys/$dia mmHg threshold: $source. Values and events entered by the user, by hand or from a photo of the display. PressSure is a personal diary, not a medical device.';
+  }
 }

@@ -2,8 +2,10 @@ import 'package:intl/intl.dart';
 
 import '../l10n/l10n.dart';
 import '../logic/bp_category.dart';
+import '../logic/event_impact.dart';
 import '../logic/schedule.dart';
 import '../logic/stats.dart';
+import '../models/life_event.dart';
 import '../models/measurement.dart';
 import '../models/settings.dart';
 
@@ -14,18 +16,28 @@ class ReportOptions {
     this.chart = true,
     this.table = true,
     this.notes = true,
+    this.events = true,
   });
 
   final bool chart;
   final bool table;
   final bool notes;
 
-  ReportOptions copyWith({bool? chart, bool? table, bool? notes}) =>
-      ReportOptions(
-        chart: chart ?? this.chart,
-        table: table ?? this.table,
-        notes: notes ?? this.notes,
-      );
+  /// Event lines on the chart and the list with the averages before and
+  /// after.
+  final bool events;
+
+  ReportOptions copyWith({
+    bool? chart,
+    bool? table,
+    bool? notes,
+    bool? events,
+  }) => ReportOptions(
+    chart: chart ?? this.chart,
+    table: table ?? this.table,
+    notes: notes ?? this.notes,
+    events: events ?? this.events,
+  );
 }
 
 /// The numbers and rows that go in the exported report.
@@ -34,6 +46,7 @@ class ReportData {
     required this.from,
     required this.to,
     required this.items,
+    required this.events,
     required this.missedDays,
     required this.settings,
     required this.schedule,
@@ -42,6 +55,7 @@ class ReportData {
 
   factory ReportData.build({
     required List<Measurement> measurements,
+    List<LifeEvent> events = const [],
     required AppSettings settings,
     required ReportRange range,
     required DateTime now,
@@ -71,10 +85,28 @@ class ReportData {
               .map((p) => p.period.start)
               .toList();
 
+    // Events the user left in the PDF, within the period, with the month
+    // before and after each one.
+    final reported = [
+      for (final e in sortedEvents(events))
+        if (e.inReport &&
+            (from == null || !e.day.isBefore(dateOnly(from))) &&
+            !e.day.isAfter(now))
+          EventImpact.of(
+            event: e,
+            measurements: sorted,
+            events: events,
+            window: ImpactWindow.oneMonth,
+            tracker: tracker,
+            now: now,
+          ),
+    ];
+
     return ReportData._(
       from: items.isEmpty ? (from ?? now) : items.first.takenAt,
       to: now,
       items: items,
+      events: reported,
       missedDays: missed,
       settings: settings,
       schedule: schedule,
@@ -87,6 +119,9 @@ class ReportData {
 
   /// Oldest first.
   final List<Measurement> items;
+
+  /// Events in the PDF, oldest first, with the month before and after.
+  final List<EventImpact> events;
 
   /// Due days in range without a reading.
   final List<DateTime> missedDays;
@@ -109,11 +144,18 @@ class ReportData {
   List<Measurement> get withNotes => items.where((m) => m.hasNote).toList();
 
   /// "5 aprile 2026 – 27 settembre 2026 · 24 misure".
-  String rangeLabel(AppLocalizations l, Dates dates) => l.rangeLabel(
-    dates.fullDate(from),
-    dates.fullDate(to),
-    l.readingsCount(items.length),
-  );
+  String rangeLabel(AppLocalizations l, Dates dates) => events.isEmpty
+      ? l.rangeLabel(
+          dates.fullDate(from),
+          dates.fullDate(to),
+          l.readingsCount(items.length),
+        )
+      : l.rangeLabelEvents(
+          dates.fullDate(from),
+          dates.fullDate(to),
+          l.readingsCount(items.length),
+          l.eventsCount(events.length),
+        );
 
   /// Table rows: readings and missed days, oldest first.
   List<({DateTime day, Measurement? m})> get rows {

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../config.dart';
 import '../l10n/l10n.dart';
 import '../logic/bp_category.dart';
+import '../logic/event_impact.dart';
+import '../models/life_event.dart';
 import '../models/measurement.dart';
 import '../ocr/ocr_engine.dart';
 import '../ocr/reading_scanner.dart';
@@ -10,6 +12,8 @@ import '../state/app_state.dart';
 import '../widgets/common.dart';
 import 'celebrate_screen.dart';
 import 'entry_screen.dart';
+import 'event_edit_screen.dart';
+import 'event_impact_screen.dart';
 import 'high_reading_screen.dart';
 import 'scan_screen.dart';
 
@@ -151,6 +155,25 @@ Future<void> _afterSave(BuildContext context, SaveOutcome? outcome) async {
     ),
   );
 }
+
+Future<void> openNewEvent(BuildContext context) =>
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const EventEditScreen()));
+
+Future<void> openEditEvent(BuildContext context, LifeEvent e) =>
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => EventEditScreen(existing: e)));
+
+/// "Prima e dopo" for [e], starting from [window].
+Future<void> openEventImpact(
+  BuildContext context,
+  LifeEvent e, {
+  ImpactWindow window = ImpactWindow.oneMonth,
+}) => Navigator.of(context).push(
+  MaterialPageRoute(
+    builder: (_) => EventImpactScreen(eventId: e.id, window: window),
+  ),
+);
 
 Future<void> openEditMeasurement(BuildContext context, Measurement m) {
   return Navigator.of(context)
